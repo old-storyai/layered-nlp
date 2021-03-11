@@ -33,7 +33,7 @@ struct PTokenLine {
     annotations: BTreeMap<
         // start token index (inclusive)
         PTokenAt,
-        BTreeMap<
+        BTreeMap< // bi-map?
             // end bound (exclusive)
             PTokenRangeTo,
             // attributes
@@ -107,12 +107,24 @@ mod numbers {
     #[derive(Default)]
     struct NumberRecognizer(());
 
-    impl Recognizer for MoneyRecognizer {
+    struct RecognizedNumber(rust_decimal::Decimal);
+    enum State {
+        /// in "123" "," "4"
+        /// .0 "1234"
+        BeforeDecimal(String),
+        /// in "123" "," "4" "." "5"
+        /// .0 "1234"
+        /// .1 "5"
+        AfterDecimal(String, String),
+    }
+
+    impl Recognizer for NumberRecognizer {
         type State = State;
 
-        type Attribute = RecognizedMoney;
+        type Attribute = RecognizedNumber;
 
         fn start(&self, next: &StepContext) -> Vec<AcceptResult<Self::State, Self::Attribute>> {
+            
             
         }
 
