@@ -1,7 +1,9 @@
+#![allow(dead_code)]
+
 use std::{
     any::{Any, TypeId},
     collections::HashMap,
-    fmt,
+    fmt::{self, Debug},
 };
 
 use std::collections::hash_map;
@@ -15,7 +17,7 @@ pub struct KvPair(TypeId, Box<dyn Storage>, Box<dyn Any>);
 // }
 
 impl KvPair {
-    pub fn new<T: 'static>(value: T) -> Self {
+    pub fn new<T: 'static + Debug>(value: T) -> Self {
         KvPair(
             TypeId::of::<T>(),
             Box::new(Vec::<T>::new()),
@@ -147,7 +149,7 @@ trait Storage {
     }
 }
 
-impl<T: 'static> Storage for Vec<T> {
+impl<T: 'static + Debug> Storage for Vec<T> {
     #[inline]
     fn as_any(&self) -> &dyn Any
     where
@@ -164,6 +166,10 @@ impl<T: 'static> Storage for Vec<T> {
     }
     fn insert_any(&mut self, val: Box<dyn Any>) {
         self.push(*val.downcast().expect("type doesn't match"));
+    }
+
+    fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Debug::fmt(self, f)
     }
 }
 
@@ -198,7 +204,7 @@ impl TypeBucket {
     ///
     /// If a value of this type already exists, it will be returned.
     #[track_caller]
-    pub fn insert<T: 'static>(&mut self, val: T) {
+    pub fn insert<T: 'static + Debug>(&mut self, val: T) {
         // self.map
         //     .get_or_insert_with(|| HashMap::default())
         //     .entry(TypeId::of::<T>())
@@ -230,6 +236,13 @@ impl TypeBucket {
             .map(|boxed_vec| boxed_vec.as_any().downcast_ref::<Vec<T>>().unwrap())
             .map(|vec| vec.as_slice())
             .unwrap_or_else(|| &[])
+    }
+
+    pub fn get_debug<T: 'static>(&self) -> Option<String> {
+        self.map
+            .get(&TypeId::of::<T>())
+            // .map(|boxed_vec| boxed_vec.as_any().downcast_ref::<Vec<T>>().unwrap())
+            .map(|vec| format!("{:?}", vec))
     }
 
     // /// Get a mutable reference to a value previously inserted on this `TypeBucket`.
@@ -294,7 +307,7 @@ fn test_type_map() {
     // assert_eq!(map.remove::<i32>(), Some(5i32));
     // assert!(map.get::<i32>().is_empty());
 
-    assert_eq!(map.get::<bool>(), &[]);
+    assert_eq!(map.get::<bool>(), &[] as &[bool]);
     assert_eq!(map.get::<MyType>(), &[MyType(10)]);
 
     map.insert(MyType(20));
