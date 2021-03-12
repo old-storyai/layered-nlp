@@ -238,11 +238,19 @@ impl TypeBucket {
             .unwrap_or_else(|| &[])
     }
 
-    pub fn get_debug<T: 'static>(&self) -> Option<String> {
+    pub fn get_debug<T: 'static + Debug>(&self) -> Vec<String> {
         self.map
             .get(&TypeId::of::<T>())
             // .map(|boxed_vec| boxed_vec.as_any().downcast_ref::<Vec<T>>().unwrap())
-            .map(|vec| format!("{:?}", vec))
+            .map(|vec| {
+                vec.as_any()
+                    .downcast_ref::<Vec<T>>()
+                    .unwrap()
+                    .iter()
+                    .map(|item| format!("{:?}", item))
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
     // /// Get a mutable reference to a value previously inserted on this `TypeBucket`.

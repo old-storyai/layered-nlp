@@ -1,5 +1,3 @@
-#![cfg(test)] // only used in tests at the moment
-
 use std::{any::TypeId, collections::HashMap};
 
 #[derive(Default)]
