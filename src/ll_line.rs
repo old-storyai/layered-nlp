@@ -210,9 +210,7 @@ impl<'a> std::fmt::Display for LLLineDisplay<'a> {
         // ex:
         //     ╰────────────╯ Amount(..)
         //                            ╰─╯ Amount(..)
-        for ((starts_at_token_idx, ends_at_token_idx), debug_value) in
-            self.include_attrs.iter()
-        {
+        for ((starts_at_token_idx, ends_at_token_idx), debug_value) in self.include_attrs.iter() {
             f.write_char('\n')?;
 
             let start_char_idx = token_idx_to_start_display_char_idx[*starts_at_token_idx];
@@ -294,8 +292,7 @@ impl LLCursorStart {
 
     // really relaxed, uncomfortably so.
     pub fn find_start_tag(&self, find_tag: &TextTag) -> Vec<(LLCursor, &str)> {
-        self.ll_line
-            .ll_tokens[self.start_at_idx..]
+        self.ll_line.ll_tokens[self.start_at_idx..]
             .iter()
             .filter_map(|ll_token| {
                 if let LToken::Text(text, tag) = &ll_token.token {
@@ -556,7 +553,13 @@ pub trait Resolver {
 }
 
 #[cfg(test)]
-pub fn ll(token_idx: usize, pos_starts_at: usize, pos_ends_at: usize, tagged: TextTag, text: &str) -> LLToken {
+pub fn ll(
+    token_idx: usize,
+    pos_starts_at: usize,
+    pos_ends_at: usize,
+    tagged: TextTag,
+    text: &str,
+) -> LLToken {
     LLToken {
         pos_starts_at,
         pos_ends_at,
