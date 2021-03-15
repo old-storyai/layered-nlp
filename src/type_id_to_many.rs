@@ -6,11 +6,23 @@ pub struct TypeIdToMany<T> {
 }
 
 impl<Value> TypeIdToMany<Value> {
-    pub fn insert<Type: 'static>(&mut self, value_to_add: Value) {
-        self.map
-            .entry(TypeId::of::<Type>())
-            .or_default()
-            .push(value_to_add);
+    pub fn insert_distinct<Type: 'static>(&mut self, value_to_add: Value)
+    where
+        Value: PartialEq,
+    {
+        let entry = self.map.entry(TypeId::of::<Type>()).or_default();
+        if !entry.contains(&value_to_add) {
+            entry.push(value_to_add);
+        }
+    }
+    pub fn insert_any_distinct(&mut self, type_id: TypeId, value_to_add: Value)
+    where
+        Value: PartialEq,
+    {
+        let entry = self.map.entry(type_id).or_default();
+        if !entry.contains(&value_to_add) {
+            entry.push(value_to_add);
+        }
     }
     pub fn get<Type: 'static>(&self) -> &[Value] {
         self.map

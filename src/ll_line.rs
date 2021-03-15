@@ -1,6 +1,6 @@
 use unicode_width::UnicodeWidthStr;
 
-use crate::type_bucket;
+use crate::type_bucket::{self, AnyAttribute};
 use crate::type_id_to_many::TypeIdToMany;
 use std::fmt::Write;
 use std::{collections::HashMap, rc::Rc};
@@ -11,14 +11,14 @@ pub enum TextTag {
     PUNC,
     SYMB,
     SPACE,
-    OTHER,
+    WORD,
 }
 
 #[derive(Debug)]
 pub enum LToken {
     Text(String, TextTag),
     /// TODO: something more interesting
-    Value(String),
+    Value,
 }
 
 impl LToken {
@@ -31,19 +31,19 @@ impl LToken {
                     None
                 }
             }
-            LToken::Value(_) => None,
+            LToken::Value { .. } => None,
         }
     }
 }
 
 #[derive(Debug)]
 pub struct LLToken {
-    token_idx: usize,
+    pub(crate) token_idx: usize,
     // token span position (not token index)
-    pos_starts_at: usize,
+    pub(crate) pos_starts_at: usize,
     // token span position (not token index)
-    pos_ends_at: usize,
-    token: LToken,
+    pub(crate) pos_ends_at: usize,
+    pub(crate) token: LToken,
 }
 
 /// (starts at, ends at) token indexes
@@ -67,7 +67,7 @@ pub struct LLLine {
 }
 
 impl LLLine {
-    pub fn new(ll_tokens: Vec<LLToken>) -> Self {
+    pub(crate) fn new(ll_tokens: Vec<LLToken>) -> Self {
         let mut starts_at: Vec<TypeIdToMany<LRange>> = Default::default();
         let mut ends_at: Vec<TypeIdToMany<LRange>> = Default::default();
         for _ in ll_tokens.iter() {
@@ -91,8 +91,8 @@ impl LLLine {
                     // insert TextTag automatically
                     attrs.insert((token_idx, token_idx), tag.clone());
                 }
-                LToken::Value(_) => {
-                    // todo, insert some initial attr for the value
+                LToken::Value => {
+                    // nothing to do...
                 }
             }
         }
@@ -128,6 +128,38 @@ impl LLLine {
 
         self
     }
+    pub(crate) fn add_any_attrs(
+        &mut self,
+        start_idx: usize,
+        end_idx: usize,
+        attrs: Vec<AnyAttribute>,
+    ) {
+        let range = (start_idx, end_idx);
+
+        for attr in attrs {
+            self.attrs
+                .starts_at
+                .get_mut(start_idx)
+                .expect("has initial starts_at value in bounds")
+                .insert_any_distinct(attr.type_id(), range);
+            self.attrs
+                .ends_at
+                .get_mut(end_idx)
+                .expect("has initial ends_at value in bounds")
+                .insert_any_distinct(attr.type_id(), range);
+            self.attrs.ranges.insert_any_distinct(attr.type_id(), range);
+            self.attrs
+                .values
+                .entry(range)
+                .or_default()
+                .insert_any_attribute(attr);
+        }
+    }
+
+    /// Get a reference to the l l line's ll tokens.
+    pub fn ll_tokens(&self) -> &[LLToken] {
+        &self.ll_tokens
+    }
 }
 
 impl LLLineAttrs {
@@ -135,12 +167,12 @@ impl LLLineAttrs {
         self.starts_at
             .get_mut(range.0)
             .expect("has initial starts_at value in bounds")
-            .insert::<T>(range);
+            .insert_distinct::<T>(range);
         self.ends_at
             .get_mut(range.1)
             .expect("has initial ends_at value in bounds")
-            .insert::<T>(range);
-        self.ranges.insert::<T>(range);
+            .insert_distinct::<T>(range);
+        self.ranges.insert_distinct::<T>(range);
         self.values.entry(range).or_default().insert(value);
     }
 }
@@ -196,8 +228,8 @@ impl<'a> std::fmt::Display for LLLineDisplay<'a> {
                     LToken::Text(text, _) => {
                         opening_line.push_str(&text);
                     }
-                    LToken::Value(to_print) => {
-                        write!(&mut opening_line, "<{}>", to_print)?;
+                    LToken::Value { .. } => {
+                        write!(&mut opening_line, "<>")?;
                     }
                 }
 
@@ -550,20 +582,4 @@ impl LLCursor {
 pub trait Resolver {
     type Attr: std::fmt::Debug + 'static;
     fn go(&self, cursor: LLCursorStart) -> Vec<LLCursorAssignment<Self::Attr>>;
-}
-
-#[cfg(test)]
-pub fn ll(
-    token_idx: usize,
-    pos_starts_at: usize,
-    pos_ends_at: usize,
-    tagged: TextTag,
-    text: &str,
-) -> LLToken {
-    LLToken {
-        pos_starts_at,
-        pos_ends_at,
-        token_idx,
-        token: LToken::Text(text.into(), tagged),
-    }
 }

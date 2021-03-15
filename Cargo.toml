@@ -9,6 +9,13 @@ version = "0.1.0"
 [dependencies]
 rust_decimal = {version = "1.10.3", default-features = false, features = ["std"]}
 unicode-width = "0.1.5"
+unicode-segmentation = "1.7.1"
+once_cell = "1.7.2"
+regex = "1.4.5"
 
 [dev-dependencies]
 insta = "1.6.3"
+
+[features]
+test = ["test-helpers"]
+test-helpers = []

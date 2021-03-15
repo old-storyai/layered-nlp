@@ -1,17 +1,17 @@
-#![allow(dead_code)]
-
 use insta;
 use rust_decimal::Decimal;
 
-use crate::ll_line::{
-    ll, LLCursorAssignment, LLCursorStart, LLLine, LLLineDisplay, LLToken, Resolver, TextTag,
-};
+use crate::create_tokens::*;
+use crate::ll_line::{LLCursorAssignment, LLCursorStart, LLLine, LLLineDisplay, Resolver, TextTag};
+
+fn split_input(input: &str) -> String {
+    format!("{:#?}", test_line(input).ll_tokens())
+}
 
 #[derive(Clone, Debug)]
 enum CurrencySymbol {
     Euro,
     USDDollars,
-    USDCents,
 }
 
 struct CurrencySymbolResolver;
@@ -147,34 +147,17 @@ impl Resolver for CurrencyAmountResolver {
     }
 }
 
-fn ll_usd_1000_25() -> Vec<LLToken> {
-    vec![
-        ll(0, 0, 1, TextTag::SYMB, "$"),
-        ll(1, 1, 2, TextTag::NATN, "1"),
-        ll(2, 2, 3, TextTag::PUNC, ","),
-        ll(3, 3, 6, TextTag::NATN, "000"),
-        ll(4, 6, 7, TextTag::PUNC, "."),
-        ll(5, 7, 9, TextTag::NATN, "25"),
-    ]
+fn ll_usd_1000_25() -> LLLine {
+    test_line("$1,000.25")
 }
 
-fn ll_1000_25_euros() -> Vec<LLToken> {
-    vec![
-        ll(0, 0, 0, TextTag::PUNC, "."),
-        ll(1, 0, 0, TextTag::SPACE, " "),
-        ll(2, 0, 0, TextTag::NATN, "1"),
-        ll(3, 0, 0, TextTag::SPACE, " "),
-        ll(4, 0, 0, TextTag::NATN, "000"),
-        ll(5, 0, 0, TextTag::PUNC, ","),
-        ll(6, 0, 0, TextTag::NATN, "25"),
-        ll(7, 0, 0, TextTag::SYMB, "€"),
-    ]
+fn ll_1000_25_euros() -> LLLine {
+    test_line(". 1 000,25€")
 }
 
 #[test]
 fn it_works() {
-    let input = ll_usd_1000_25();
-    let ll_line = LLLine::new(input)
+    let ll_line = ll_usd_1000_25()
         .run(&CurrencySymbolResolver)
         .run(&AmountResolver {
             delimiters: vec![','],
@@ -196,8 +179,7 @@ fn it_works() {
 }
 #[test]
 fn it_works_euro() {
-    let input = ll_1000_25_euros();
-    let ll_line = LLLine::new(input)
+    let ll_line = ll_1000_25_euros()
         .run(&CurrencySymbolResolver)
         .run(&AmountResolver {
             delimiters: vec![' '],
@@ -215,5 +197,143 @@ fn it_works_euro() {
                             ╰Euro
           ╰──────────────╯Amount(1000.25)
           ╰─────────────────╯CurrencyAmount(Euro, Amount(1000.25))
+    "###);
+}
+
+#[cfg(test)]
+pub(crate) fn test_line(input: &str) -> LLLine {
+    create_tokens(
+        vec![InputToken::Text {
+            text: input.to_string(),
+            attrs: Vec::new(),
+        }],
+        |text| text.encode_utf16().count(),
+    )
+}
+
+#[test]
+fn test_tokenizing() {
+    let input = ". 1 000.23. € .5";
+
+    insta::assert_display_snapshot!(split_input(&input), @r###"
+    [
+        LLToken {
+            token_idx: 0,
+            pos_starts_at: 0,
+            pos_ends_at: 1,
+            token: Text(
+                ".",
+                PUNC,
+            ),
+        },
+        LLToken {
+            token_idx: 1,
+            pos_starts_at: 1,
+            pos_ends_at: 2,
+            token: Text(
+                " ",
+                SPACE,
+            ),
+        },
+        LLToken {
+            token_idx: 2,
+            pos_starts_at: 2,
+            pos_ends_at: 3,
+            token: Text(
+                "1",
+                NATN,
+            ),
+        },
+        LLToken {
+            token_idx: 3,
+            pos_starts_at: 3,
+            pos_ends_at: 4,
+            token: Text(
+                " ",
+                SPACE,
+            ),
+        },
+        LLToken {
+            token_idx: 4,
+            pos_starts_at: 4,
+            pos_ends_at: 7,
+            token: Text(
+                "000",
+                NATN,
+            ),
+        },
+        LLToken {
+            token_idx: 5,
+            pos_starts_at: 7,
+            pos_ends_at: 8,
+            token: Text(
+                ".",
+                PUNC,
+            ),
+        },
+        LLToken {
+            token_idx: 6,
+            pos_starts_at: 8,
+            pos_ends_at: 10,
+            token: Text(
+                "23",
+                NATN,
+            ),
+        },
+        LLToken {
+            token_idx: 7,
+            pos_starts_at: 10,
+            pos_ends_at: 11,
+            token: Text(
+                ".",
+                PUNC,
+            ),
+        },
+        LLToken {
+            token_idx: 8,
+            pos_starts_at: 11,
+            pos_ends_at: 12,
+            token: Text(
+                " ",
+                SPACE,
+            ),
+        },
+        LLToken {
+            token_idx: 9,
+            pos_starts_at: 12,
+            pos_ends_at: 13,
+            token: Text(
+                "€",
+                SYMB,
+            ),
+        },
+        LLToken {
+            token_idx: 10,
+            pos_starts_at: 13,
+            pos_ends_at: 14,
+            token: Text(
+                " ",
+                SPACE,
+            ),
+        },
+        LLToken {
+            token_idx: 11,
+            pos_starts_at: 14,
+            pos_ends_at: 15,
+            token: Text(
+                ".",
+                PUNC,
+            ),
+        },
+        LLToken {
+            token_idx: 12,
+            pos_starts_at: 15,
+            pos_ends_at: 16,
+            token: Text(
+                "5",
+                NATN,
+            ),
+        },
+    ]
     "###);
 }

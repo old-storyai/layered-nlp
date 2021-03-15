@@ -10,15 +10,18 @@ use std::collections::hash_map;
 use std::marker::PhantomData;
 
 /// Prepared key-value pair
-pub struct KvPair(TypeId, Box<dyn Storage>, Box<dyn Any>);
-// pub enum KvPair {
-//     Add(TypeId, Box<dyn Any>),
-//     First(TypeId, Box<dyn Any>)
-// }
+pub struct AnyAttribute(TypeId, Box<dyn Storage>, Box<dyn Any>);
 
-impl KvPair {
+impl std::fmt::Debug for AnyAttribute {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // self.1.debug(f)
+        f.debug_struct("AnyAttribute").finish()
+    }
+}
+
+impl AnyAttribute {
     pub fn new<T: 'static + Debug>(value: T) -> Self {
-        KvPair(
+        AnyAttribute(
             TypeId::of::<T>(),
             Box::new(Vec::<T>::new()),
             Box::new(value),
@@ -26,11 +29,14 @@ impl KvPair {
     }
 
     pub fn extract<T: 'static>(self) -> Result<T, Self> {
-        let KvPair(key, empty_value, value) = self;
+        let AnyAttribute(key, empty_value, value) = self;
         value
             .downcast()
             .map(|boxed| *boxed)
-            .map_err(|e| KvPair(key, empty_value, e))
+            .map_err(|e| AnyAttribute(key, empty_value, e))
+    }
+    pub fn type_id(&self) -> TypeId {
+        self.0
     }
 }
 
@@ -196,7 +202,7 @@ impl TypeBucket {
     ///
     /// If a value of this type already exists, it will be returned.
     #[track_caller]
-    pub fn insert_kv_pair(&mut self, KvPair(key, empty_value, value): KvPair) {
+    pub fn insert_any_attribute(&mut self, AnyAttribute(key, empty_value, value): AnyAttribute) {
         self.map.entry(key).or_insert(empty_value).insert_any(value)
     }
 
