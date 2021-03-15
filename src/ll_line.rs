@@ -1,3 +1,5 @@
+use unicode_width::UnicodeWidthStr;
+
 use crate::type_bucket;
 use crate::type_id_to_many::TypeIdToMany;
 use std::fmt::Write;
@@ -36,6 +38,7 @@ impl LToken {
 
 #[derive(Debug)]
 pub struct LLToken {
+    token_idx: usize,
     // token span position (not token index)
     pos_starts_at: usize,
     // token span position (not token index)
@@ -105,9 +108,8 @@ impl LLLine {
 
         let assignments = recognizer.go(LLCursorStart {
             ll_line: ll_line.clone(),
+            start_at_idx: 0,
         });
-
-        dbg!(&assignments);
 
         self = Rc::try_unwrap(ll_line)
             .map_err(drop)
@@ -188,7 +190,7 @@ impl<'a> std::fmt::Display for LLLineDisplay<'a> {
                     opening_line.extend(std::iter::repeat(' ').take(SPACE_PADDING));
                 }
 
-                token_idx_to_start_display_char_idx.push(opening_line.len());
+                token_idx_to_start_display_char_idx.push(UnicodeWidthStr::width(&*opening_line));
 
                 match &ll_token.token {
                     LToken::Text(text, _) => {
@@ -199,7 +201,7 @@ impl<'a> std::fmt::Display for LLLineDisplay<'a> {
                     }
                 }
 
-                token_idx_to_end_display_char_idx.push(opening_line.len());
+                token_idx_to_end_display_char_idx.push(UnicodeWidthStr::width(&*opening_line));
             }
         }
 
@@ -261,6 +263,7 @@ impl<'a> LLLineDisplay<'a> {
     }
 }
 
+#[derive(Clone)]
 pub struct LLCursor {
     // private
     start_idx: usize,
@@ -270,6 +273,8 @@ pub struct LLCursor {
 
 pub struct LLCursorStart {
     ll_line: Rc<LLLine>,
+    /// Where to begin in the line (inclusive, default is 0)
+    start_at_idx: usize,
 }
 
 #[derive(Debug)]
@@ -288,18 +293,17 @@ impl LLCursorStart {
     }
 
     // really relaxed, uncomfortably so.
-    pub fn find_start_tag(&self, _tag: &TextTag) -> Vec<(LLCursor, &str)> {
+    pub fn find_start_tag(&self, find_tag: &TextTag) -> Vec<(LLCursor, &str)> {
         self.ll_line
-            .ll_tokens
+            .ll_tokens[self.start_at_idx..]
             .iter()
-            .enumerate()
-            .filter_map(|(i, ll_token)| {
+            .filter_map(|ll_token| {
                 if let LToken::Text(text, tag) = &ll_token.token {
-                    if tag == _tag {
+                    if tag == find_tag {
                         Some((
                             LLCursor {
-                                start_idx: i,
-                                end_idx: i,
+                                start_idx: ll_token.token_idx,
+                                end_idx: ll_token.token_idx,
                                 ll_line: self.ll_line.clone(),
                             },
                             text.as_str(),
@@ -312,6 +316,11 @@ impl LLCursorStart {
                 }
             })
             .collect()
+    }
+
+    pub fn find_next_start_tag(&self, find_tag: &TextTag) -> Option<(LLCursor, &str)> {
+        // Not optimal, but okay for now
+        self.find_start_tag(find_tag).into_iter().next()
     }
 
     pub fn find_start<Attr: 'static + std::fmt::Debug>(&self) -> Vec<(LLCursor, &Attr)> {
@@ -342,6 +351,13 @@ impl LLCursorStart {
 }
 
 impl LLCursor {
+    pub fn start_after(&self) -> LLCursorStart {
+        LLCursorStart {
+            ll_line: self.ll_line.clone(),
+            start_at_idx: self.end_idx + 1,
+        }
+    }
+
     pub fn match_forwards<Attr: 'static>(&self) -> Vec<(LLCursor, &Attr)> {
         // [ ... ] - Current Cursor
         //        [ ... ] - Trying to match Attr
@@ -480,6 +496,45 @@ impl LLCursor {
             })
             .collect()
     }
+    pub fn match_backwards_char(&self, c: &[char]) -> Option<LLCursor> {
+        // [ ... ] - Current Cursor
+        //        [ ... ] - Trying to match Attr
+        //        [...] - Trying to match Attr
+        if self.start_idx == 0 {
+            return None;
+        }
+
+        self.ll_line
+            .attrs
+            .ends_at
+            .get(self.start_idx - 1)
+            .expect("Huh... match_backwards was at the start")
+            .get::<char>()
+            .iter()
+            .flat_map(|range| {
+                self.ll_line
+                    .attrs
+                    .values
+                    .get(&range)
+                    .unwrap()
+                    .get::<char>() // probably optimizable since there is only going to ever be one potential char per token
+                    .iter()
+                    .rev()
+                    .map(move |val| (val, range.0))
+            })
+            .filter_map(|(val, start_idx)| {
+                if c.contains(&val) {
+                    Some(LLCursor {
+                        start_idx,
+                        end_idx: self.end_idx,
+                        ll_line: self.ll_line.clone(),
+                    })
+                } else {
+                    None
+                }
+            })
+            .next()
+    }
     // fn match_forwards_skip_spaces<Attr>(&self) -> Option<(LLCursor, &Attr)> {
     //     unimplemented!()
     // }
@@ -501,10 +556,11 @@ pub trait Resolver {
 }
 
 #[cfg(test)]
-pub fn ll(pos_starts_at: usize, pos_ends_at: usize, tagged: TextTag, text: &str) -> LLToken {
+pub fn ll(token_idx: usize, pos_starts_at: usize, pos_ends_at: usize, tagged: TextTag, text: &str) -> LLToken {
     LLToken {
         pos_starts_at,
         pos_ends_at,
+        token_idx,
         token: LToken::Text(text.into(), tagged),
     }
 }
