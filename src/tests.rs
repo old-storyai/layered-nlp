@@ -160,12 +160,14 @@ fn ll_usd_1000_25() -> Vec<LLToken> {
 
 fn ll_1000_25_euros() -> Vec<LLToken> {
     vec![
-        ll(0, 0, 0, TextTag::NATN, "1"),
+        ll(0, 0, 0, TextTag::PUNC, "."),
         ll(1, 0, 0, TextTag::SPACE, " "),
-        ll(2, 0, 0, TextTag::NATN, "000"),
-        ll(3, 0, 0, TextTag::PUNC, ","),
-        ll(4, 0, 0, TextTag::NATN, "25"),
-        ll(5, 0, 0, TextTag::SYMB, "€"),
+        ll(2, 0, 0, TextTag::NATN, "1"),
+        ll(3, 0, 0, TextTag::SPACE, " "),
+        ll(4, 0, 0, TextTag::NATN, "000"),
+        ll(5, 0, 0, TextTag::PUNC, ","),
+        ll(6, 0, 0, TextTag::NATN, "25"),
+        ll(7, 0, 0, TextTag::SYMB, "€"),
     ]
 }
 
@@ -209,9 +211,9 @@ fn it_works_euro() {
     ll_line_display.include::<CurrencyAmount>();
 
     insta::assert_display_snapshot!(ll_line_display, @r###"
-    1     000  ,  25  €
-                      ╰Euro
-    ╰──────────────╯Amount(1000.25)
-    ╰─────────────────╯CurrencyAmount(Euro, Amount(1000.25))
+    .     1     000  ,  25  €
+                            ╰Euro
+          ╰──────────────╯Amount(1000.25)
+          ╰─────────────────╯CurrencyAmount(Euro, Amount(1000.25))
     "###);
 }
