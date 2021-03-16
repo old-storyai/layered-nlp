@@ -301,6 +301,25 @@ pub struct LLCursor {
     ll_line: Rc<LLLine>,
 }
 
+impl LLCursor {
+    pub fn expand_forwards(&self, to_end_idx: usize) -> Self {
+        assert!(self.end_idx <= to_end_idx);
+        LLCursor {
+            start_idx: self.start_idx,
+            end_idx: to_end_idx,
+            ll_line: self.ll_line.clone(),
+        }
+    }
+    pub fn expand_backwards(&self, to_start_idx: usize) -> Self {
+        assert!(self.start_idx >= to_start_idx);
+        LLCursor {
+            start_idx: to_start_idx,
+            end_idx: self.end_idx,
+            ll_line: self.ll_line.clone(),
+        }
+    }
+}
+
 pub struct LLCursorStart {
     ll_line: Rc<LLLine>,
     /// Where to begin in the line (inclusive, default is 0)
@@ -318,8 +337,30 @@ pub struct LLCursorAssignment<Attr> {
 
 impl LLCursorStart {
     // really relaxed, uncomfortably so.
-    pub fn find_start_eq<T: PartialEq>(&self, _attr: &T) -> Vec<LLCursor> {
-        unimplemented!()
+    pub fn find_start_eq<T: 'static + PartialEq>(&self, equals_attr: &T) -> Vec<LLCursor> {
+        self.ll_line
+            .attrs
+            .values
+            .iter()
+            .filter_map(|(&(start_idx, end_idx), value)| {
+                let attrs = value.get::<T>();
+                if !attrs.is_empty() {
+                    Some(
+                        attrs
+                            .iter()
+                            .filter(|attr| *attr == equals_attr)
+                            .map(move |_| LLCursor {
+                                start_idx,
+                                end_idx,
+                                ll_line: self.ll_line.clone(),
+                            }),
+                    )
+                } else {
+                    None
+                }
+            })
+            .flatten()
+            .collect()
     }
 
     // really relaxed, uncomfortably so.
@@ -350,6 +391,14 @@ impl LLCursorStart {
     pub fn find_next_start_tag(&self, find_tag: &TextTag) -> Option<(LLCursor, &str)> {
         // Not optimal, but okay for now
         self.find_start_tag(find_tag).into_iter().next()
+    }
+
+    pub fn find_next_eq<Attr: 'static + std::fmt::Debug + PartialEq>(
+        &self,
+        value: &Attr,
+    ) -> Option<LLCursor> {
+        // Not optimal, but okay for now
+        self.find_start_eq(value).into_iter().next()
     }
 
     pub fn find_start<Attr: 'static + std::fmt::Debug>(&self) -> Vec<(LLCursor, &Attr)> {
@@ -486,6 +535,33 @@ impl LLCursor {
                     val,
                 )
             })
+    }
+    // expands from current forwards
+    pub fn match_forwards_until_before_eq_or_until_end_of_line<T: 'static + PartialEq>(
+        &self,
+        equals_attr: &T,
+    ) -> (LLCursor, ()) {
+        (
+            self.ll_line.attrs.starts_at[self.end_idx + 1..]
+                .iter()
+                .map(|start_at| start_at.get::<T>())
+                .flatten()
+                .filter(|range| {
+                    self.ll_line
+                        .attrs
+                        .values
+                        .get(&range)
+                        .unwrap()
+                        .get::<T>()
+                        .iter()
+                        .any(|val| val == equals_attr)
+                })
+                .map(|&(start_idx, _)| self.expand_forwards(start_idx - 1))
+                .next()
+                // or else return end of line
+                .unwrap_or_else(|| self.expand_forwards(self.ll_line.ll_tokens().len() - 1)),
+            (),
+        )
     }
     pub fn match_backwards<Attr: 'static>(&self) -> Vec<(LLCursor, &Attr)> {
         //        [ ... ] - Current Cursor

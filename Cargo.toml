@@ -15,7 +15,3 @@ regex = "1.4.5"
 
 [dev-dependencies]
 insta = "1.6.3"
-
-[features]
-test = ["test-helpers"]
-test-helpers = []
