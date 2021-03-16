@@ -4,7 +4,7 @@ use regex::Regex;
 use crate::ll_line::TextTag;
 
 // Hand wavy, punctuation is just the characters that can affect how a sentence is split apart
-const PUNCTUATION: &'static [char] = &[',', '.', '!', ';', ':', '?'];
+const PUNCTUATION: &'static [char] = &[',', '.', '!', ';', ':', '?', '\'', '"'];
 
 static IS_WORD: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\w+$").unwrap());
 
