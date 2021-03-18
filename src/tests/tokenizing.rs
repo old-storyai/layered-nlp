@@ -1,5 +1,9 @@
 use super::*;
 
+fn split_input(input: &str) -> String {
+    format!("{:#?}", test_line(input).ll_tokens())
+}
+
 #[test]
 fn test_tokenizing() {
     let input = ". 1 000.23. € .5";

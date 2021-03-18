@@ -1,3 +1,5 @@
+use crate::ll_line::{x, LLSelection};
+
 use super::*;
 
 #[derive(Clone, Debug)]
@@ -11,18 +13,14 @@ struct CurrencySymbolResolver;
 impl Resolver for CurrencySymbolResolver {
     type Attr = CurrencySymbol;
 
-    fn go(&self, start: LLCursorStart) -> Vec<LLCursorAssignment<Self::Attr>> {
+    fn go(&self, start: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>> {
         start
-            .find_start_tag(&TextTag::SYMB)
+            .find_by(&x::token_has_any(&['€', '$']))
             .into_iter()
-            .filter_map(|(cur, sym_str)| {
-                if let "$" = sym_str {
-                    Some(cur.finish(CurrencySymbol::USDDollars))
-                } else if let "€" = sym_str {
-                    Some(cur.finish(CurrencySymbol::Euro))
-                } else {
-                    None
-                }
+            .map(|(sel, sym_ch)| match sym_ch {
+                '$' => sel.finish_with_attr(CurrencySymbol::USDDollars),
+                '€' => sel.finish_with_attr(CurrencySymbol::Euro),
+                _ => unreachable!(),
             })
             .collect()
     }
@@ -40,73 +38,66 @@ struct AmountResolver {
 impl Resolver for AmountResolver {
     type Attr = Amount;
 
-    fn go(&self, mut start: LLCursorStart) -> Vec<LLCursorAssignment<Self::Attr>> {
-        let mut attrs = Vec::new();
+    fn go(&self, mut search_range_sel: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>> {
+        let mut attrs = vec![];
 
-        while let Some((cur, start_natn_str)) = start.find_next_start_tag(&TextTag::NATN) {
-            let mut number_string = String::from(start_natn_str);
+        while let Some((mut sel, (_, text))) = search_range_sel
+            .find_first_by(&(x::attr_eq(&TextTag::NATN), x::token_text()))
+            .into_iter()
+            .next()
+        {
+            let mut number_string = String::from(text);
             let mut last_valid_cursor = None;
-            let mut current = cur;
 
             loop {
-                // skip delimiters going forwards
-                if let Some(delimeter_cur) = current.match_forwards_char(self.delimiters.as_slice())
+                if let Some((delimeter_sel, _)) =
+                    sel.match_first_forwards(&x::token_has_any(self.delimiters.as_slice()))
                 {
-                    last_valid_cursor = Some(current);
-                    current = delimeter_cur;
+                    last_valid_cursor = Some(sel);
+                    sel = delimeter_sel;
                 } else {
                     break;
                 }
 
-                if let Some((following_delimeter_cur, natn_str)) =
-                    current.match_forwards_tag(&TextTag::NATN)
+                if let Some((following_delimeter_cur, (_, text))) =
+                    sel.match_first_forwards(&(x::attr_eq(&TextTag::NATN), x::token_text()))
                 {
-                    number_string.push_str(natn_str);
+                    number_string.push_str(text);
                     last_valid_cursor = None;
-                    current = following_delimeter_cur;
+                    sel = following_delimeter_cur;
                 } else {
                     break;
                 }
             }
 
             // 100,,20
-            if let Some(with_decimal_cur) = current.match_forwards_char(&[self.decimal]) {
-                last_valid_cursor = Some(current);
+            if let Some((with_decimal_sel, _)) =
+                sel.match_first_forwards(&x::token_has_any(&[self.decimal]))
+            {
+                last_valid_cursor = Some(sel);
                 number_string.push('.');
-                current = with_decimal_cur;
+                sel = with_decimal_sel;
             }
 
-            loop {
-                if let Some((following_decimal_cur, natn_str)) =
-                    current.match_forwards_tag(&TextTag::NATN)
-                {
-                    number_string.push_str(natn_str);
-                    last_valid_cursor = None;
-                    current = following_decimal_cur;
-                } else {
-                    break;
-                }
-
-                if let Some((trailing_delimeter_cur, natn_str)) =
-                    current.match_forwards_tag(&TextTag::NATN)
-                {
-                    number_string.push_str(natn_str);
-                    last_valid_cursor = None;
-                    current = trailing_delimeter_cur;
-                } else {
-                    break;
-                }
+            if let Some((following_decimal_cur, ((), text))) =
+                sel.match_first_forwards(&(x::attr_eq(&TextTag::NATN), x::token_text()))
+            {
+                number_string.push_str(text);
+                last_valid_cursor = None;
+                sel = following_decimal_cur;
             }
-
-            // ensure that we perform our next iteration after the matched so we
-            // don't accidentally include the natns in the already finished Amount
-            start = current.start_after();
 
             attrs.push(
                 last_valid_cursor
-                    .unwrap_or(current)
-                    .finish(Amount(number_string.parse::<Decimal>().unwrap())),
+                    .unwrap_or(sel.clone())
+                    .finish_with_attr(Amount(number_string.parse::<Decimal>().unwrap())),
             );
+
+            if let [_, Some(right_sel)] = search_range_sel.split_with(&sel) {
+                search_range_sel = right_sel;
+            } else {
+                break;
+            }
         }
 
         attrs
@@ -121,18 +112,15 @@ struct CurrencyAmountResolver;
 impl Resolver for CurrencyAmountResolver {
     type Attr = CurrencyAmount;
 
-    fn go(&self, cursor: LLCursorStart) -> Vec<LLCursorAssignment<Self::Attr>> {
+    fn go(&self, cursor: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>> {
         cursor
-            .find_start::<CurrencySymbol>()
+            .find_by(&x::attr::<CurrencySymbol>())
             .into_iter()
-            .filter_map(|(cur, curr_sym)| {
-                // curr_sym
-                cur.match_forwards::<Amount>()
-                    .into_iter()
-                    .next()
-                    .or_else(|| cur.match_backwards::<Amount>().into_iter().next())
+            .filter_map(|(sel, curr_sym)| {
+                sel.match_first_forwards(&x::attr::<Amount>())
+                    .or_else(|| sel.match_first_backwards(&x::attr::<Amount>()))
                     .map(|(cur_with_amt, amt)| {
-                        cur_with_amt.finish(CurrencyAmount(curr_sym.clone(), amt.clone()))
+                        cur_with_amt.finish_with_attr(CurrencyAmount(curr_sym.clone(), amt.clone()))
                     })
             })
             .collect()

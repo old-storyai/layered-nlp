@@ -80,60 +80,80 @@ where
     F: Fn(&str) -> usize,
 {
     // `fold` because we end up splitting more than just unicode word boundaries
-    input.split_word_bounds().fold(Vec::new(), |mut ltokens, unicode_word| {
-        // Split apart digit word boundaries, because unicode `split_word_bounds` will group digits and commas and points together
-        // such as "12,3" and "10.0". We need these to be split up further into ["12", ",", "3"] and ["10", ".", "0"] respectively.
-        // http://www.unicode.org/reports/tr29/#Word_Boundaries
-        // if \d+[,\.]\d+ or more repeats (3 is minimum)
-        if unicode_word.chars().next().unwrap().is_ascii_digit() {
-            // make assumtions about the length of every char being 1
-            assert!(
-                unicode_word.is_ascii(),
-                "Unexpected non-ascii digit word boundary: {}",
-                unicode_word
-            );
+    input
+        .split_word_bounds()
+        .fold(Vec::new(), |mut ltokens, unicode_word| {
+            // Split apart digit word boundaries, because unicode `split_word_bounds` will group digits and commas and points together
+            // such as "12,3" and "10.0". We need these to be split up further into ["12", ",", "3"] and ["10", ".", "0"] respectively.
+            // http://www.unicode.org/reports/tr29/#Word_Boundaries
+            // if \d+[,\.a-zA-Z]\d+ or more repeats (3 is minimum)
+            if unicode_word.chars().next().unwrap().is_ascii_digit() {
+                // make assumtions about the length of every char being 1
+                assert!(
+                    unicode_word.is_ascii(),
+                    "Unexpected non-ascii digit word boundary: {}",
+                    unicode_word
+                );
 
-            let mut collected_digits = String::new();
+                let mut collected_digits = String::new();
+                let mut collected_letters = String::new();
 
-            // using a macro since pulling this out into a closure or function would be very verbose
-            // as you'd have to pass references to collected_digits, get_text_size, ltokens
-            macro_rules! insert_collected_digits {
-                () => {
-                    // if this triggers, we might just want to check `if collected_digits.len() > 0 { ...`
-                    assert!(collected_digits.len() > 0, "Expected length of collected digits to be greater than 0 so we aren't pushing an empty token into the list");
-                    let size = get_text_size(&collected_digits);
-                    ltokens.push((
-                        LToken::Text(std::mem::take(&mut collected_digits), TextTag::NATN),
-                        size,
-                    ));
+                // using a macro since pulling this out into a closure or function would be very verbose
+                // as you'd have to pass references to collected_digits, get_text_size, ltokens
+                macro_rules! insert_collected_digits {
+                    () => {
+                        if collected_digits.len() > 0 {
+                            let size = get_text_size(&collected_digits);
+                            ltokens.push((
+                                LToken::Text(std::mem::take(&mut collected_digits), TextTag::NATN),
+                                size,
+                            ));
+                        }
+                    };
                 };
-            };
 
-            for ch in unicode_word.chars() {
-                if ch.is_ascii_digit() {
-                    collected_digits.push(ch);
-                } else {
-                    insert_collected_digits!();
+                macro_rules! insert_collected_letters {
+                    () => {
+                        if collected_letters.len() > 0 {
+                            let size = get_text_size(&collected_letters);
+                            ltokens.push((
+                                LToken::Text(std::mem::take(&mut collected_letters), TextTag::WORD),
+                                size,
+                            ));
+                        }
+                    };
+                };
 
-                    let text = String::from(ch);
-                    let size = get_text_size(&text);
-                    ltokens.push((LToken::Text(text, TextTag::PUNC), size));
+                for ch in unicode_word.chars() {
+                    if ch.is_ascii_digit() {
+                        insert_collected_letters!();
+                        collected_digits.push(ch);
+                    } else if ch.is_alphabetic() {
+                        insert_collected_digits!();
+                        collected_letters.push(ch);
+                    } else {
+                        insert_collected_letters!();
+                        insert_collected_digits!();
+                        let text = String::from(ch);
+                        let size = get_text_size(&text);
+                        ltokens.push((LToken::Text(text, TextTag::PUNC), size));
+                    }
                 }
+
+                insert_collected_letters!();
+                insert_collected_digits!();
+            } else {
+                ltokens.push((
+                    LToken::Text(
+                        unicode_word.to_string(),
+                        get_word_tag::get_unicode_word_tag(unicode_word),
+                    ),
+                    get_text_size(unicode_word),
+                ));
             }
 
-            insert_collected_digits!();
-        } else {
-            ltokens.push((
-                LToken::Text(
-                    unicode_word.to_string(),
-                    get_word_tag::get_unicode_word_tag(unicode_word),
-                ),
-                get_text_size(unicode_word),
-            ));
-        }
-
-        ltokens
-    })
+            ltokens
+        })
 }
 
 #[cfg(test)]
