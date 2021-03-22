@@ -190,5 +190,5 @@ pub struct LLCursorAssignment<Attr> {
 
 pub trait Resolver {
     type Attr: std::fmt::Debug + 'static;
-    fn go(&self, cursor: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>>;
+    fn go(&self, selection: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>>;
 }

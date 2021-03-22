@@ -40,6 +40,14 @@ impl std::fmt::Debug for LLSelection {
     }
 }
 
+impl PartialEq for LLSelection {
+    fn eq(&self, other: &Self) -> bool {
+        self.start_idx == other.start_idx
+            && self.end_idx == other.end_idx
+            && Rc::ptr_eq(&self.ll_line, &other.ll_line)
+    }
+}
+
 impl LLSelection {
     /// Returns None if the line is empty
     pub fn from_line(ll_line: Rc<LLLine>) -> Option<Self> {
@@ -59,7 +67,7 @@ impl LLSelection {
         let matches = self.find_by(matcher);
 
         if matches.is_empty() {
-            return Vec::new();
+            return vec![self.clone()];
         }
 
         if matches.len() == 1 {
