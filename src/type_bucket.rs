@@ -247,7 +247,6 @@ impl TypeBucket {
     pub fn get_debug<T: 'static + Debug>(&self) -> Vec<String> {
         self.map
             .get(&TypeId::of::<T>())
-            // .map(|boxed_vec| boxed_vec.as_any().downcast_ref::<Vec<T>>().unwrap())
             .map(|vec| {
                 vec.as_any()
                     .downcast_ref::<Vec<T>>()

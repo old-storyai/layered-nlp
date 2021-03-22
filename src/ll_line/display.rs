@@ -110,7 +110,7 @@ impl<'a> LLLineDisplay<'a> {
                 .flat_map(|type_bucket| type_bucket.get_debug::<T>())
                 .rev()
             {
-                self.include_attrs.push((ll_range.clone(), debug_value));
+                self.include_attrs.push((*ll_range, debug_value));
             }
         }
     }

@@ -48,6 +48,11 @@ impl PartialEq for LLSelection {
     }
 }
 
+pub enum Direction {
+    Forwards,
+    Backwards,
+}
+
 impl LLSelection {
     /// Returns None if the line is empty
     pub fn from_line(ll_line: Rc<LLLine>) -> Option<Self> {
@@ -158,6 +163,21 @@ impl LLSelection {
                 )
             })
             .collect()
+    }
+
+    pub fn match_first<'a, M: XMatchNext<'a>>(
+        &'a self,
+        prefer: Direction,
+        matcher: &M,
+    ) -> Option<(LLSelection, M::Out)> {
+        match prefer {
+            Direction::Forwards => self
+                .match_first_forwards(matcher)
+                .or_else(|| self.match_first_backwards(matcher)),
+            Direction::Backwards => self
+                .match_first_backwards(matcher)
+                .or_else(|| self.match_first_forwards(matcher)),
+        }
     }
 
     pub fn match_first_forwards<'a, M: XMatchNext<'a>>(

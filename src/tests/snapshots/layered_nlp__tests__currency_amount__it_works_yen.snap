@@ -1,0 +1,9 @@
+---
+source: src/tests/currency_amount.rs
+expression: ll_line_display
+
+---
+¥  227
+╰Yen
+   ╰─╯Amount(227)
+╰────╯CurrencyAmount(Yen, Amount(227))

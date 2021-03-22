@@ -3,7 +3,7 @@ mod display;
 mod ll_selection;
 pub(crate) mod x;
 
-pub(crate) use ll_selection::LLSelection;
+pub(crate) use ll_selection::{Direction, LLSelection};
 
 use unicode_width::UnicodeWidthStr;
 
@@ -95,13 +95,13 @@ impl LLLine {
         LLLine { attrs, ll_tokens }
     }
 
-    pub fn run<R>(mut self, recognizer: &R) -> Self
+    pub fn run<R>(mut self, resolver: &R) -> Self
     where
         R: Resolver,
     {
         let ll_line = Rc::new(self);
 
-        let assignments = recognizer.go(LLSelection {
+        let assignments = resolver.go(LLSelection {
             ll_line: ll_line.clone(),
             start_idx: 0,
             end_idx: ll_line.ll_tokens().len() - 1,

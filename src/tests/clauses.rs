@@ -23,59 +23,55 @@ impl Resolver for ClauseResolver {
         let mut clauses = Vec::new();
 
         // Start by splitting the line on each `ConditionStart`
-        let mut if_blocks = sel
-            .split_by(&x::attr_eq(&ClauseKeyword::ConditionStart))
-            .into_iter();
+        let if_blocks = sel.split_by(&x::attr_eq(&ClauseKeyword::ConditionStart));
 
-        if let Some(first_if_block) = if_blocks.next() {
-            if first_if_block == sel {
-                // If the first selection is the whole line that means there is no `ConditionStart` in it
-                // We probably want to handle this case better in the future
-                clauses.push(sel.finish_with_attr(Clause::Independent));
-            } else {
-                std::iter::once(first_if_block)
-                    .chain(if_blocks)
-                    .for_each(|if_block_sel| {
-                        // If there is a `ConditionStart` in the line we split each selection further by splitting in each `ClauseKeyword`
-                        // We get all clauses this way
-                        let mut clause_iter = if_block_sel
-                            .split_by(&x::attr::<ClauseKeyword>())
-                            .into_iter();
+        if if_blocks.first() == Some(&sel) {
+            // If the first selection is the whole line that means there is no `ConditionStart` in it
+            // We probably want to handle this case better in the future
+            clauses.push(sel.finish_with_attr(Clause::Independent));
+        } else {
+            if_blocks.iter().for_each(|if_block_sel| {
+                // If there is a `ConditionStart` in the line we split each selection further by splitting in each `ClauseKeyword`
+                // We get all clauses this way
+                let mut clause_iter = if_block_sel
+                    .split_by(&x::attr::<ClauseKeyword>())
+                    .into_iter();
 
-                        // The next goal is to determine the kind of each clause
-                        // The first clause can only be a `Condition` or `LeadingEffect` based on if it is preceded by a `ConditionStart` or not
-                        // The other clauses are either `LeadingEffect` if they are before the `ConditionStart` or `TrailingEffect` if they are after
-                        if let Some(sel) = clause_iter.next() {
-                            if let Some((sel, _)) = sel
-                                .match_first_backwards(&x::attr_eq(&ClauseKeyword::ConditionStart))
+                // The next goal is to determine the kind of each clause
+                // The first clause can only be a `Condition` or `LeadingEffect` based on if it is preceded by a `ConditionStart` or not
+                // The other clauses are either `LeadingEffect` if they are before the `ConditionStart` or `TrailingEffect` if they are after
+                if let Some(clause_selection) = clause_iter.next() {
+                    if let Some((clause_and_keyword_selection, _)) = clause_selection
+                        .match_first_backwards(&x::attr_eq(&ClauseKeyword::ConditionStart))
+                    {
+                        clauses
+                            .push(clause_and_keyword_selection.finish_with_attr(Clause::Condition));
+
+                        clauses.extend(clause_iter.map(|sel| {
+                            if let Some((clause_and_keyword_selection_again, _)) =
+                                sel.match_first_backwards(&x::attr::<ClauseKeyword>())
                             {
-                                clauses.push(sel.finish_with_attr(Clause::Condition));
-
-                                clauses.extend(clause_iter.map(|sel| {
-                                    if let Some((sel, _)) =
-                                        sel.match_first_backwards(&x::attr::<ClauseKeyword>())
-                                    {
-                                        sel.finish_with_attr(Clause::TrailingEffect)
-                                    } else {
-                                        sel.finish_with_attr(Clause::TrailingEffect)
-                                    }
-                                }));
+                                clause_and_keyword_selection_again
+                                    .finish_with_attr(Clause::TrailingEffect)
                             } else {
-                                clauses.push(sel.finish_with_attr(Clause::LeadingEffect));
-
-                                clauses.extend(clause_iter.map(|sel| {
-                                    if let Some((sel, _)) =
-                                        sel.match_first_backwards(&x::attr::<ClauseKeyword>())
-                                    {
-                                        sel.finish_with_attr(Clause::LeadingEffect)
-                                    } else {
-                                        sel.finish_with_attr(Clause::LeadingEffect)
-                                    }
-                                }));
+                                sel.finish_with_attr(Clause::TrailingEffect)
                             }
-                        }
-                    });
-            }
+                        }));
+                    } else {
+                        clauses.push(clause_selection.finish_with_attr(Clause::LeadingEffect));
+
+                        clauses.extend(clause_iter.map(|sel| {
+                            if let Some((sel, _)) =
+                                sel.match_first_backwards(&x::attr::<ClauseKeyword>())
+                            {
+                                sel.finish_with_attr(Clause::LeadingEffect)
+                            } else {
+                                sel.finish_with_attr(Clause::LeadingEffect)
+                            }
+                        }));
+                    }
+                }
+            });
         }
 
         clauses
@@ -128,6 +124,7 @@ enum POSTag {
     Other,
 }
 
+// tc stands for? test case
 fn tc(tokens: &[(&str, &[POSTag])]) -> String {
     let ll_line = create_tokens(
         tokens
