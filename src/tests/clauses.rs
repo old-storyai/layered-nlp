@@ -19,6 +19,9 @@ struct ClauseResolver {
 impl Resolver for ClauseResolver {
     type Attr = Clause;
 
+    // write a test if you want to live
+    //               ^ ConditionStart
+
     fn go(&self, sel: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>> {
         let mut clauses = Vec::new();
 
@@ -30,6 +33,7 @@ impl Resolver for ClauseResolver {
             // We probably want to handle this case better in the future
             clauses.push(sel.finish_with_attr(Clause::Independent));
         } else {
+            // [ write a test , you want to live]
             if_blocks.iter().for_each(|if_block_sel| {
                 // If there is a `ConditionStart` in the line we split each selection further by splitting in each `ClauseKeyword`
                 // We get all clauses this way
@@ -40,12 +44,18 @@ impl Resolver for ClauseResolver {
                 // The next goal is to determine the kind of each clause
                 // The first clause can only be a `Condition` or `LeadingEffect` based on if it is preceded by a `ConditionStart` or not
                 // The other clauses are either `LeadingEffect` if they are before the `ConditionStart` or `TrailingEffect` if they are after
-                if let Some(clause_selection) = clause_iter.next() {
-                    if let Some((clause_and_keyword_selection, _)) = clause_selection
-                        .match_first_backwards(&x::attr_eq(&ClauseKeyword::ConditionStart))
+
+                // can we pattern match head :: tail?
+                if let Some(sel) = clause_iter.next() {
+                    // write a test
+                    // ^__________^ LeadingEffect
+                    // if you want to live
+                    // ^_________________^ Condition
+
+                    if let Some((sel, _)) =
+                        sel.match_first_backwards(&x::attr_eq(&ClauseKeyword::ConditionStart))
                     {
-                        clauses
-                            .push(clause_and_keyword_selection.finish_with_attr(Clause::Condition));
+                        clauses.push(sel.finish_with_attr(Clause::Condition));
 
                         clauses.extend(clause_iter.map(|sel| {
                             if let Some((clause_and_keyword_selection_again, _)) =
@@ -58,7 +68,7 @@ impl Resolver for ClauseResolver {
                             }
                         }));
                     } else {
-                        clauses.push(clause_selection.finish_with_attr(Clause::LeadingEffect));
+                        clauses.push(sel.finish_with_attr(Clause::LeadingEffect));
 
                         clauses.extend(clause_iter.map(|sel| {
                             if let Some((sel, _)) =
@@ -158,6 +168,177 @@ macro_rules! tc {
             )+
         ])
     }
+}
+
+// if you go the shop then get eggs and bread and milk
+
+#[test]
+fn test_dutch() {
+    use POSTag::*;
+
+    // if you are cycling then look out
+
+    insta::assert_display_snapshot!(
+        tc!(
+            "als", Cond,
+            " ",
+            "je",
+            " ",
+            "aan",
+            " ",
+            "het",
+            " ",
+            "fietsen",
+            " ",
+            "bent",
+            " ",
+            "pas", // Dutch would need to consume this prior verb?
+            " ",
+            "dan", CondThen,
+            " ",
+            "op",            
+        ), @r###""###);
+}
+
+#[test]
+fn test_english() {
+    use POSTag::*;
+
+    // write a test if you want to live
+
+    insta::assert_display_snapshot!(
+        tc!(
+        "if", Cond,
+        " ",
+        "you",
+        " ",
+        "are",
+        " ",
+        "cycling",
+        ",", CondThen, // something would need to be smart enough to tag this.
+        " ",
+        "look",
+        " ",
+        "out",
+        "!",
+        ), @r###"
+    if     you     are     cycling  ,     look     out  !
+    ╰╯ConditionStart
+                                    ╰Then
+    ╰────────────────────────────╯Condition
+                                    ╰───────────────────╯TrailingEffect
+    ╰╯Cond
+                                    ╰CondThen
+    "###);
+}
+
+#[test]
+fn test_ifs() {
+    use POSTag::*;
+
+    // write a test if you want to live
+
+    insta::assert_display_snapshot!(
+        tc!(
+            "if", Cond,
+            " ",
+            "foo",
+            " ",
+            "and", And,
+            " ",
+            "if", Cond,
+            " ",
+            "bar",
+            " ",
+            "then", CondThen,
+            " ",
+            "whatever",
+        ), @r###"
+    if     foo     and     if     bar     then     whatever
+    ╰╯ConditionStart
+                           ╰╯ConditionStart
+                                          ╰──╯Then
+                   ╰─╯And
+    ╰───────────╯Condition
+                   ╰────╯TrailingEffect
+                           ╰───────────╯Condition
+                                          ╰───────────────╯TrailingEffect
+    ╰╯Cond
+                   ╰─╯And
+                           ╰╯Cond
+                                          ╰──╯CondThen
+    "###);
+}
+
+#[test]
+fn test_will() {
+    use POSTag::*;
+
+    // write a test if you want to live
+
+    insta::assert_display_snapshot!(
+        tc!(
+            "live",
+            " ",
+            "and", And,
+            " ",
+            "stop",
+            " ",
+            "and", And,
+            " ",
+            "start",
+            " ",
+            "a",
+            " ",
+            "test", Noun,
+            " ",
+            "if", Cond,
+            " ",
+            "you", Pronoun,
+            " ",
+            "want", Verb,
+            " ",
+            "to",
+            " ",
+            "live",
+            " ",
+            "and", And,
+            " ",
+            "stop",
+            " ",
+            "and", And,
+            " ",
+            "start",
+            " ",
+            "and", And,
+            " ",
+            "whatever",
+            ".",
+        ), @r###"
+    live     and     stop     and     start     a     test     if     you     want     to     live     and     stop     and     start     and     whatever  .
+                                                               ╰╯ConditionStart
+             ╰─╯And
+                              ╰─╯And
+                                                                                                       ╰─╯And
+                                                                                                                        ╰─╯And
+                                                                                                                                          ╰─╯And
+    ╰─────╯LeadingEffect
+             ╰─────────────╯LeadingEffect
+                              ╰─────────────────────────────╯LeadingEffect
+                                                               ╰────────────────────────────────────╯Condition
+                                                                                                       ╰─────────────╯TrailingEffect
+                                                                                                                        ╰──────────────╯TrailingEffect
+                                                                                                                                          ╰─────────────────╯TrailingEffect
+             ╰─╯And
+                              ╰─╯And
+                                                      ╰──╯Noun
+                                                               ╰╯Cond
+                                                                      ╰─╯Pronoun
+                                                                              ╰──╯Verb
+                                                                                                       ╰─╯And
+                                                                                                                        ╰─╯And
+                                                                                                                                          ╰─╯And
+    "###);
 }
 
 #[test]
