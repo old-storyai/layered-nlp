@@ -106,7 +106,7 @@ impl<'l, A: XMatchNext<'l>, B: XMatchNext<'l>> XMatchNext<'l> for (A, B) {
             .flat_map(|(a, a_to_idx)| {
                 bs.iter().filter_map(move |(b, b_to_idx)| {
                     if a_to_idx == *b_to_idx {
-                        Some(((a, *b), a_to_idx.clone()))
+                        Some(((a, *b), a_to_idx))
                     } else {
                         None
                     }
