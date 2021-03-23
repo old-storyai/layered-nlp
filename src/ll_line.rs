@@ -1,9 +1,9 @@
 mod as_tokens;
 mod display;
 mod ll_selection;
-pub(crate) mod x;
+pub mod x;
 
-pub(crate) use ll_selection::LLSelection;
+pub use ll_selection::LLSelection;
 
 use unicode_width::UnicodeWidthStr;
 
