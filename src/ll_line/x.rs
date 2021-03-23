@@ -265,7 +265,7 @@ impl<'l> XDirection<'l> for XForwards {
         set: &[T],
         ll_line: &'l LLLine,
     ) -> Vec<(&'l T, ToIdx)> {
-        // [ ... ] - Current Cursor
+        // [ ... ] - Current Selection
         //        [ ... ] - Trying to match Attr
         let next_token_idx = self.from_idx;
         if next_token_idx == ll_line.ll_tokens.len() {
@@ -291,7 +291,7 @@ impl<'l> XDirection<'l> for XForwards {
     }
 
     fn next_text_token(&self, ll_line: &'l LLLine) -> Option<(&'l str, ToIdx)> {
-        // [ ... ] - Current Cursor
+        // [ ... ] - Current Selection
         //        [ ... ] - Trying to match Attr
         if self.from_idx == ll_line.ll_tokens.len() {
             return None;
@@ -321,7 +321,7 @@ impl<'l> XDirection<'l> for XBackwards {
         equals: &T,
         ll_line: &'l LLLine,
     ) -> Vec<((), ToIdx)> {
-        //        [ ... ] - Current Cursor
+        //        [ ... ] - Current Selection
         // [ ... ] - Trying to match Attr
         //   [...] - Trying to match Attr
         if self.from_idx == 0 {
@@ -356,7 +356,7 @@ impl<'l> XDirection<'l> for XBackwards {
     }
 
     fn next_attr<T: 'static>(&self, ll_line: &'l LLLine) -> Vec<(&'l T, ToIdx)> {
-        //        [ ... ] - Current Cursor
+        //        [ ... ] - Current Selection
         // [ ... ] - Trying to match Attr
         //   [...] - Trying to match Attr
         if self.from_idx == 0 {
@@ -389,7 +389,7 @@ impl<'l> XDirection<'l> for XBackwards {
         set: &[T],
         ll_line: &'l LLLine,
     ) -> Vec<(&'l T, ToIdx)> {
-        //        [ ... ] - Current Cursor
+        //        [ ... ] - Current Selection
         // [ ... ] - Trying to match Attr
         //   [...] - Trying to match Attr
         if self.from_idx == 0 {

@@ -118,7 +118,6 @@ impl LLLine {
             value,
         } in assignments
         {
-            // let ll_line = Rc::get_mut(&mut rc_ll_line).expect("there is no other Rc currently");
             self.attrs.insert((start_idx, end_idx), value);
         }
 
@@ -179,6 +178,8 @@ fn assert_ll_lines_equals(first: &Rc<LLLine>, second: &Rc<LLLine>) {
         panic!("Two different lines used")
     }
 }
+
+// TODO rename
 #[derive(Debug)]
 pub struct LLCursorAssignment<Attr> {
     // private

@@ -1,7 +1,7 @@
 use super::x::{XBackwards, XForwards};
 use super::{assert_ll_lines_equals, LLCursorAssignment, LLLine, Rc, XMatchNext};
 
-// Cutting Selection (cursor) -> Iter<cursor>
+// Cutting Selection (selection) -> Iter<selection>
 //  - split_by_x             :: [aaaxaaaxaaa] -> [aaa]x[aaa]x[aaa]
 //  - find_by_x              :: [aaaxaaaxaaa] -> aaa[x]aaa[x]aaa
 // skips overlapping
@@ -10,10 +10,10 @@ use super::{assert_ll_lines_equals, LLCursorAssignment, LLLine, Rc, XMatchNext};
 // skips overlapping
 //  - split_by_backwards_x   :: [aaaxaaaxaaa] -> [aaa]x[aaa]x[aaa]
 //  - find_by_backwards_x    :: [aaaxaaaxaaa] -> aaa[x]aaa[x]aaa
-// Expand Selection (cursor) -> Iter<cursor>
+// Expand Selection (selection) -> Iter<selection>
 //  - match_forwards_x          :: x[aaa]x -> x[aaax]
 //  - match_backwards_x         :: x[aaa]x -> [xaaa]x
-// Shrinking Selection (cursor) -> Option<cursor>
+// Shrinking Selection (selection) -> Option<selection>
 //  - trim_x                    :: [xaaax] -> x[aaa]x
 //  - trim_leading_x            :: [xaaax] -> x[aaax]
 //  - trim_trailing_x           :: [xaaax] -> [xaaa]x
@@ -134,7 +134,7 @@ impl LLSelection {
         &'a self,
         matcher: &M,
     ) -> Vec<(LLSelection, M::Out)> {
-        // [ ... ] - Current Cursor
+        // [ ... ] - Current selection
         //        [ ... ] - Trying to match Attr
         if self.end_idx + 1 == self.ll_line.ll_tokens.len() {
             return Vec::new();

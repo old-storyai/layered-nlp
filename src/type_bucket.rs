@@ -14,7 +14,6 @@ pub struct AnyAttribute(TypeId, Box<dyn Storage>, Box<dyn Any>);
 
 impl std::fmt::Debug for AnyAttribute {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // self.1.debug(f)
         f.debug_struct("AnyAttribute").finish()
     }
 }
@@ -211,13 +210,6 @@ impl TypeBucket {
     /// If a value of this type already exists, it will be returned.
     #[track_caller]
     pub fn insert<T: 'static + Debug>(&mut self, val: T) {
-        // self.map
-        //     .get_or_insert_with(|| HashMap::default())
-        //     .entry(TypeId::of::<T>())
-        //     .or_insert_with(|| Box::new(Vec::<T>::new()))
-        //     .downcast_mut::<Vec<T>>()
-        //     .expect("correct type is Vec<T>")
-        //     .push(val);
         self.map
             .entry(TypeId::of::<T>())
             .or_insert_with(|| Box::new(Vec::<T>::new()))
@@ -247,7 +239,6 @@ impl TypeBucket {
     pub fn get_debug<T: 'static + Debug>(&self) -> Vec<String> {
         self.map
             .get(&TypeId::of::<T>())
-            // .map(|boxed_vec| boxed_vec.as_any().downcast_ref::<Vec<T>>().unwrap())
             .map(|vec| {
                 vec.as_any()
                     .downcast_ref::<Vec<T>>()
