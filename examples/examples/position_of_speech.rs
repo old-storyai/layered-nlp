@@ -3,14 +3,14 @@ use layered_part_of_speech::*;
 
 fn main() {
     let ll_line = create_tokens(
-        vec![InputToken::Text {
-            text: "Don't step on the broken glass.".to_string(),
-            attrs: Vec::new(),
-        }],
+        vec![InputToken::text(
+            "Don't step on the broken glass.".to_string(),
+            Vec::new(),
+        )],
         |text| text.encode_utf16().count(),
     );
 
-    let ll_line = ll_line.run(&POSTagResolver {});
+    let ll_line = ll_line.run(&POSTagResolver::default());
 
     let mut ll_line_display = LLLineDisplay::new(&ll_line);
     ll_line_display.include::<Tag>();

@@ -33,7 +33,8 @@ pub enum Tag {
     CloseParenthesis,
 }
 
-pub struct POSTagResolver {}
+#[derive(Default)]
+pub struct POSTagResolver(());
 
 impl Resolver for POSTagResolver {
     type Attr = Tag;

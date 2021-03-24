@@ -99,6 +99,7 @@ impl<'a> LLLineDisplay<'a> {
             include_attrs: Vec::new(),
         }
     }
+    // TODO consider making this method take and return `self`
     pub fn include<T: 'static + std::fmt::Debug + Clone>(&mut self) {
         for ll_range in self.ll_line.attrs.ranges.get::<T>() {
             for debug_value in self
