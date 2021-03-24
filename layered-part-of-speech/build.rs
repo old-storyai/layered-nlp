@@ -85,7 +85,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     // only run this if the FST needs to be (re)built
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=../web_ui/registry/out/registry.json");
     Ok(())
 }
 
