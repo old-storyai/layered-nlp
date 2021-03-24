@@ -110,7 +110,7 @@ where
                             ));
                         }
                     };
-                };
+                }
 
                 macro_rules! insert_collected_letters {
                     () => {
@@ -122,7 +122,7 @@ where
                             ));
                         }
                     };
-                };
+                }
 
                 for ch in unicode_word.chars() {
                     if ch.is_ascii_digit() {
