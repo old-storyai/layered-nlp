@@ -38,7 +38,7 @@ fn test() {
         Algolia,
         Magic,
         Wolfram,
-    };
+    }
 
     let ll_line = create_tokens(
         vec![

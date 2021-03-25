@@ -1,8 +1,8 @@
 mod create_tokens;
 mod ll_line;
+mod resolvers;
 mod type_bucket;
 mod type_id_to_many;
-mod resolvers;
 
 #[cfg(test)]
 mod tests;
