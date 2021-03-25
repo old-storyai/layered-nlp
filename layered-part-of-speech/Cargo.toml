@@ -11,3 +11,4 @@ fst = "0.4.5"
 fst = "0.4.5"
 layered-nlp = { path = ".." }
 insta = "1.7.0"
+wiktionary-part-of-speech-extract = { path = "../../wiktionary-part-of-speech-extract" }

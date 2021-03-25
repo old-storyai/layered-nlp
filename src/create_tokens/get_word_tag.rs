@@ -6,7 +6,7 @@ use crate::ll_line::TextTag;
 // Hand wavy, punctuation is just the characters that can affect how a sentence is split apart
 const PUNCTUATION: &[char] = &[',', '.', '!', ';', ':', '?', '\'', '"'];
 
-static IS_WORD: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\w+$").unwrap());
+static IS_WORD: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\w[\w'-]*$").unwrap());
 
 static IS_SPACE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\s+$").unwrap());
 
