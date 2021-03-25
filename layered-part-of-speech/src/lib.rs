@@ -10,7 +10,7 @@ impl Resolver for POSTagResolver {
 
     fn go(&self, selection: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>> {
         selection
-            .find_by(&(x::attr_eq(&TextTag::WORD), x::token_text()))
+            .find_by(&x::any_of((x::attr_eq(&TextTag::WORD), x::token_text())))
             .into_iter()
             .flat_map(|(selection, (_, word))| {
                 Some(

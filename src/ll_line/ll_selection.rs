@@ -1,5 +1,5 @@
 use super::x::{XBackwards, XForwards};
-use super::{assert_ll_lines_equals, LLCursorAssignment, LLLine, Rc, XMatchNext};
+use super::{assert_ll_lines_equals, LLCursorAssignment, LLLine, Rc, XMatch};
 
 // Cutting Selection (selection) -> Iter<selection>
 //  - split_by_x             :: [aaaxaaaxaaa] -> [aaa]x[aaa]x[aaa]
@@ -63,7 +63,7 @@ impl LLSelection {
         }
     }
 
-    pub fn split_by<'a, M: XMatchNext<'a>>(&'a self, matcher: &M) -> Vec<LLSelection> {
+    pub fn split_by<'a, M: XMatch<'a>>(&'a self, matcher: &M) -> Vec<LLSelection> {
         let matches = self.find_by(matcher);
 
         if matches.is_empty() {
@@ -100,7 +100,7 @@ impl LLSelection {
             .collect()
     }
 
-    pub fn find_by<'a, M: XMatchNext<'a>>(&'a self, matcher: &M) -> Vec<(LLSelection, M::Out)> {
+    pub fn find_by<'a, M: XMatch<'a>>(&'a self, matcher: &M) -> Vec<(LLSelection, M::Out)> {
         (self.start_idx..=self.end_idx)
             .map(|i| {
                 let forwards = XForwards { from_idx: i };
@@ -123,17 +123,58 @@ impl LLSelection {
             .collect()
     }
 
-    pub fn find_first_by<'a, M: XMatchNext<'a>>(
+    pub fn find_first_by<'a, M: XMatch<'a>>(
         &'a self,
         matcher: &M,
     ) -> Option<(LLSelection, M::Out)> {
         self.find_by(matcher).into_iter().next()
     }
 
-    pub fn match_forwards<'a, M: XMatchNext<'a>>(
+    pub fn find_by_forwards_and_backwards<'a, M: XMatch<'a>>(
         &'a self,
         matcher: &M,
     ) -> Vec<(LLSelection, M::Out)> {
+        (self.start_idx..=self.end_idx)
+            .map(|i| {
+                let forwards = XForwards { from_idx: i };
+
+                matcher
+                    .go(&forwards, &self.ll_line)
+                    .into_iter()
+                    .map(move |(out, next_idx)| {
+                        (
+                            LLSelection {
+                                start_idx: i,
+                                end_idx: next_idx.0,
+                                ll_line: self.ll_line.clone(),
+                            },
+                            out,
+                        )
+                    })
+                    .chain({
+                        let backwards = XBackwards { from_idx: i };
+
+                        dbg!(backwards.from_idx);
+
+                        matcher.go(&backwards, &self.ll_line).into_iter().map(
+                            move |(out, next_idx)| {
+                                (
+                                    LLSelection {
+                                        start_idx: next_idx.0,
+                                        end_idx: i,
+                                        ll_line: self.ll_line.clone(),
+                                    },
+                                    out,
+                                )
+                            },
+                        )
+                    })
+            })
+            .flatten()
+            .collect()
+    }
+
+    pub fn match_forwards<'a, M: XMatch<'a>>(&'a self, matcher: &M) -> Vec<(LLSelection, M::Out)> {
         // [ ... ] - Current selection
         //        [ ... ] - Trying to match Attr
         if self.end_idx + 1 == self.ll_line.ll_tokens.len() {
@@ -160,33 +201,34 @@ impl LLSelection {
             .collect()
     }
 
-    pub fn match_first_forwards<'a, M: XMatchNext<'a>>(
+    pub fn match_first_forwards<'a, M: XMatch<'a>>(
         &'a self,
         matcher: &M,
     ) -> Option<(LLSelection, M::Out)> {
         self.match_forwards(matcher).into_iter().next()
     }
 
-    pub fn match_forwards_longest<'a, M: XMatchNext<'a>>(
+    pub fn match_forwards_longest<'a, M: XMatch<'a>>(
         &'a self,
         matcher: &M,
     ) -> Option<(LLSelection, M::Out)> {
         todo!()
     }
 
-    pub fn match_forwards_shortest<'a, M: XMatchNext<'a>>(
+    pub fn match_forwards_shortest<'a, M: XMatch<'a>>(
         &'a self,
         matcher: &M,
     ) -> Option<(LLSelection, M::Out)> {
         todo!()
     }
 
-    pub fn match_backwards<'a, M: XMatchNext<'a>>(
-        &'a self,
-        matcher: &M,
-    ) -> Vec<(LLSelection, M::Out)> {
+    pub fn match_backwards<'a, M: XMatch<'a>>(&'a self, matcher: &M) -> Vec<(LLSelection, M::Out)> {
+        if self.start_idx == 0 {
+            return Vec::new();
+        }
+
         let backwards = XBackwards {
-            from_idx: self.start_idx,
+            from_idx: self.start_idx - 1,
         };
 
         matcher
@@ -205,7 +247,7 @@ impl LLSelection {
             .collect()
     }
 
-    pub fn match_first_backwards<'a, M: XMatchNext<'a>>(
+    pub fn match_first_backwards<'a, M: XMatch<'a>>(
         &'a self,
         matcher: &M,
     ) -> Option<(LLSelection, M::Out)> {
@@ -269,6 +311,18 @@ impl LLSelection {
             start_idx: self.start_idx,
             value,
         }
+    }
+}
+
+pub trait FinishWith<T> {
+    fn finish_with<Attr, F: Fn(T) -> Attr>(self, f: F) -> Vec<LLCursorAssignment<Attr>>;
+}
+
+impl<T, I: IntoIterator<Item = (LLSelection, T)>> FinishWith<T> for I {
+    fn finish_with<Attr, F: Fn(T) -> Attr>(self, f: F) -> Vec<LLCursorAssignment<Attr>> {
+        self.into_iter()
+            .map(|(selection, t)| selection.finish_with_attr(f(t)))
+            .collect()
     }
 }
 

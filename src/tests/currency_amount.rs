@@ -1,4 +1,4 @@
-use crate::ll_line::{x, LLSelection};
+use crate::ll_line::{x, FinishWith, LLSelection};
 
 use super::*;
 
@@ -41,8 +41,8 @@ impl Resolver for AmountResolver {
     fn go(&self, mut search_range_sel: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>> {
         let mut attrs = vec![];
 
-        while let Some((mut selection, (_, text))) =
-            search_range_sel.find_first_by(&(x::attr_eq(&TextTag::NATN), x::token_text()))
+        while let Some((mut selection, (_, text))) = search_range_sel
+            .find_first_by(&x::any_of((x::attr_eq(&TextTag::NATN), x::token_text())))
         {
             let mut number_string = String::from(text);
             let mut last_valid_selection = None;
@@ -58,8 +58,8 @@ impl Resolver for AmountResolver {
                     break;
                 }
 
-                if let Some((following_delimeter_sel, (_, text))) =
-                    selection.match_first_forwards(&(x::attr_eq(&TextTag::NATN), x::token_text()))
+                if let Some((following_delimeter_sel, (_, text))) = selection
+                    .match_first_forwards(&x::any_of((x::attr_eq(&TextTag::NATN), x::token_text())))
                 {
                     number_string.push_str(text);
                     last_valid_selection = None;
@@ -79,8 +79,8 @@ impl Resolver for AmountResolver {
                     selection = with_decimal_sel;
                 }
 
-                if let Some((following_decimal_sel, ((), text))) =
-                    selection.match_first_forwards(&(x::attr_eq(&TextTag::NATN), x::token_text()))
+                if let Some((following_decimal_sel, ((), text))) = selection
+                    .match_first_forwards(&x::any_of((x::attr_eq(&TextTag::NATN), x::token_text())))
                 {
                     number_string.push_str(text);
                     last_valid_selection = None;
@@ -115,16 +115,11 @@ impl Resolver for CurrencyAmountResolver {
 
     fn go(&self, selection: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>> {
         selection
-            .find_by(&x::attr::<CurrencySymbol>())
-            .into_iter()
-            .filter_map(|(sel, curr_sym)| {
-                sel.match_first_forwards(&x::attr::<Amount>())
-                    .or_else(|| sel.match_first_backwards(&x::attr::<Amount>()))
-                    .map(|(sel_with_amt, amt)| {
-                        sel_with_amt.finish_with_attr(CurrencyAmount(curr_sym.clone(), amt.clone()))
-                    })
-            })
-            .collect()
+            .find_by_forwards_and_backwards(&x::seq((
+                x::attr::<CurrencySymbol>(),
+                x::attr::<Amount>(),
+            )))
+            .finish_with(|(cur_sym, amt)| CurrencyAmount(cur_sym.clone(), amt.clone()))
     }
 }
 
