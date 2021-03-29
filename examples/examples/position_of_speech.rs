@@ -17,6 +17,7 @@ fn main() {
 
     insta::assert_display_snapshot!(ll_line_display, @r###"
     Don't     step     on     the     broken     glass     and     the     tablesaw     in     Paris  .
+    ╰───╯Verb
     ╰───╯Noun
     ╰───╯Interjection
               ╰──╯Verb
@@ -28,6 +29,7 @@ fn main() {
                        ╰╯Adjective
                               ╰─╯Preposition
                               ╰─╯Adverb
+                                      ╰────╯Verb
                                       ╰────╯Adjective
                                                  ╰───╯Verb
                                                  ╰───╯Noun
