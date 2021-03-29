@@ -1,9 +1,9 @@
 mod as_tokens;
 mod display;
 mod ll_selection;
-pub(crate) mod x;
+pub mod x;
 
-pub(crate) use ll_selection::LLSelection;
+pub use ll_selection::{FinishWith, LLSelection};
 
 use unicode_width::UnicodeWidthStr;
 
@@ -12,7 +12,7 @@ use crate::type_id_to_many::TypeIdToMany;
 pub use display::LLLineDisplay;
 use std::fmt::Write;
 use std::{collections::HashMap, rc::Rc};
-use x::XMatchNext;
+use x::XMatch;
 pub use x::{Attr, AttrEq};
 
 #[derive(Clone, Debug, PartialEq)]

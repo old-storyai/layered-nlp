@@ -9,3 +9,4 @@ edition = "2018"
 [dev-dependencies]
 layered-nlp = { path = ".." }
 insta = "1.7.0"
+layered-part-of-speech = { path = "../layered-part-of-speech" }

@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["leudz <dylan.ancel@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[build-dependencies]
+fst = "0.4.5"
 
 [dependencies]
+fst = "0.4.5"
+layered-nlp = { path = ".." }
+insta = "1.7.0"
+wiktionary-part-of-speech-extract = { path = "../../wiktionary-part-of-speech-extract" }

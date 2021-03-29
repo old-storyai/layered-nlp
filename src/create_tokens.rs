@@ -49,6 +49,10 @@ where
         }
         InputToken::Custom { size, attrs } => (vec![(LToken::Value, size)], attrs),
     }) {
+        if ltokens.is_empty() {
+            panic!("Cannot create a LLLine from empty String");
+        }
+
         let from_idx = lltokens.len();
         for (ltoken, size) in ltokens {
             let next_size = current_size + size;
