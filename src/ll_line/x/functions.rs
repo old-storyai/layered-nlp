@@ -1,10 +1,10 @@
 use super::*;
 
-pub fn any_of<'a, T: AnyOf>(tuple: T) -> T::Out {
+pub fn any_of<T: AnyOf>(tuple: T) -> T::Out {
     tuple.into_any()
 }
 
-pub fn seq<'a, T: Seq>(tuple: T) -> T::Out {
+pub fn seq<T: Seq>(tuple: T) -> T::Out {
     tuple.into_seq()
 }
 
