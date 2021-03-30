@@ -35,14 +35,13 @@ impl<'l, A: XMatch<'l>, B: XMatch<'l>> XMatch<'l> for Seq2<A, B> {
             .go(direction, ll_line)
             .into_iter()
             .flat_map(|(a, to_idx)| {
-                Some(
-                    self.1
-                        .go(&direction.after(to_idx.0, ll_line)?, ll_line)
-                        .into_iter()
-                        .map(move |(b, to_idx)| ((a, b), to_idx)),
-                )
+                direction
+                    .after(to_idx.0, ll_line)
+                    .map(|direction| self.1.go(&direction, ll_line))
+                    .unwrap_or_else(Vec::new)
+                    .into_iter()
+                    .map(move |(b, to_idx)| ((a, b), to_idx))
             })
-            .flatten()
             .collect()
     }
 }
@@ -60,22 +59,20 @@ impl<'l, A: XMatch<'l>, B: XMatch<'l>, C: XMatch<'l>> XMatch<'l> for Seq3<A, B, 
             .go(direction, ll_line)
             .into_iter()
             .flat_map(|(a, to_idx)| {
-                Some(
-                    self.1
-                        .go(&direction.after(to_idx.0, ll_line)?, ll_line)
-                        .into_iter()
-                        .flat_map(move |(b, to_idx)| {
-                            Some(
-                                self.2
-                                    .go(&direction.after(to_idx.0, ll_line)?, ll_line)
-                                    .into_iter()
-                                    .map(move |(c, to_idx)| ((a, b, c), to_idx)),
-                            )
-                        }),
-                )
+                direction
+                    .after(to_idx.0, ll_line)
+                    .map(|direction| self.1.go(&direction, ll_line))
+                    .unwrap_or_else(Vec::new)
+                    .into_iter()
+                    .flat_map(move |(b, to_idx)| {
+                        direction
+                            .after(to_idx.0, ll_line)
+                            .map(|direction| self.2.go(&direction, ll_line))
+                            .unwrap_or_else(Vec::new)
+                            .into_iter()
+                            .map(move |(c, to_idx)| ((a, b, c), to_idx))
+                    })
             })
-            .flatten()
-            .flatten()
             .collect()
     }
 }
