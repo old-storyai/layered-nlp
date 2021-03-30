@@ -13,15 +13,12 @@ impl Resolver for POSTagResolver {
             .find_by(&x::any_of((x::attr_eq(&TextTag::WORD), x::token_text())))
             .into_iter()
             .flat_map(|(selection, (_, word))| {
-                Some(
-                    ENGLISH_TAG_LOOKUP
-                        .get(&word.to_lowercase())
-                        .unwrap_or_else(|| TagSet::of(&[Tag::Noun]))
-                        .tags()
-                        .map(move |tag| selection.finish_with_attr(tag)),
-                )
+                ENGLISH_TAG_LOOKUP
+                    .get(&word.to_lowercase())
+                    .unwrap_or_else(|| TagSet::of(&[Tag::Noun]))
+                    .tags()
+                    .map(move |tag| selection.finish_with_attr(tag))
             })
-            .flatten()
             .collect()
     }
 }
