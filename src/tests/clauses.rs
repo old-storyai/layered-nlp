@@ -28,7 +28,8 @@ impl Resolver for ClauseResolver {
             .split_by(&x::attr::<ClauseKeyword>())
             .into_iter()
             .for_each(|clause_sel| {
-                if let Some((clause_and_keyword_sel, keyword)) = clause_sel.match_first_backwards(&x::attr::<ClauseKeyword>())
+                if let Some((clause_and_keyword_sel, keyword)) =
+                    clause_sel.match_first_backwards(&x::attr::<ClauseKeyword>())
                 {
                     match keyword {
                         ClauseKeyword::And => {
@@ -41,10 +42,13 @@ impl Resolver for ClauseResolver {
                         ClauseKeyword::ConditionStart => {
                             found_cond = true;
 
-                            clauses.push(clause_and_keyword_sel.finish_with_attr(Clause::Condition));
+                            clauses
+                                .push(clause_and_keyword_sel.finish_with_attr(Clause::Condition));
                         }
                         ClauseKeyword::Then => {
-                            clauses.push(clause_and_keyword_sel.finish_with_attr(Clause::TrailingEffect));
+                            clauses.push(
+                                clause_and_keyword_sel.finish_with_attr(Clause::TrailingEffect),
+                            );
                         }
                     }
                 } else {
