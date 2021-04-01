@@ -1,10 +1,6 @@
-mod clauses;
 mod currency_amount;
 mod ll_selection;
 mod tokenizing;
-
-use insta;
-use rust_decimal::Decimal;
 
 use crate::create_tokens::*;
 use crate::ll_line::{LLCursorAssignment, LLLine, LLLineDisplay, LLSelection, Resolver, TextTag};

@@ -1,4 +1,5 @@
 use super::*;
+use unicode_width::UnicodeWidthStr;
 
 pub struct LLLineDisplay<'a> {
     ll_line: &'a LLLine,

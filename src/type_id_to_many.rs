@@ -11,6 +11,7 @@ impl<Value> TypeIdToMany<Value> {
         Value: PartialEq,
     {
         let entry = self.map.entry(TypeId::of::<Type>()).or_default();
+
         if !entry.contains(&value_to_add) {
             entry.push(value_to_add);
         }
@@ -20,6 +21,7 @@ impl<Value> TypeIdToMany<Value> {
         Value: PartialEq,
     {
         let entry = self.map.entry(type_id).or_default();
+
         if !entry.contains(&value_to_add) {
             entry.push(value_to_add);
         }
@@ -27,7 +29,6 @@ impl<Value> TypeIdToMany<Value> {
     pub fn get<Type: 'static>(&self) -> &[Value] {
         self.map
             .get(&TypeId::of::<Type>())
-            .map_or(&[], |vec| vec.as_slice())
+            .map_or(&[], Vec::as_slice)
     }
-    // ...
 }

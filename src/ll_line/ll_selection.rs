@@ -154,8 +154,6 @@ impl LLSelection {
                     .chain({
                         let backwards = XBackwards { from_idx: i };
 
-                        dbg!(backwards.from_idx);
-
                         matcher.go(&backwards, &self.ll_line).into_iter().map(
                             move |(out, next_idx)| {
                                 (
@@ -210,14 +208,14 @@ impl LLSelection {
 
     pub fn match_forwards_longest<'a, M: XMatch<'a>>(
         &'a self,
-        matcher: &M,
+        _matcher: &M,
     ) -> Option<(LLSelection, M::Out)> {
         todo!()
     }
 
     pub fn match_forwards_shortest<'a, M: XMatch<'a>>(
         &'a self,
-        matcher: &M,
+        _matcher: &M,
     ) -> Option<(LLSelection, M::Out)> {
         todo!()
     }
@@ -312,54 +310,4 @@ impl LLSelection {
             value,
         }
     }
-}
-
-pub trait FinishWith<T> {
-    fn finish_with<Attr, F: Fn(T) -> Attr>(self, f: F) -> Vec<LLCursorAssignment<Attr>>;
-}
-
-impl<T, I: IntoIterator<Item = (LLSelection, T)>> FinishWith<T> for I {
-    fn finish_with<Attr, F: Fn(T) -> Attr>(self, f: F) -> Vec<LLCursorAssignment<Attr>> {
-        self.into_iter()
-            .map(|(selection, t)| selection.finish_with_attr(f(t)))
-            .collect()
-    }
-}
-
-#[test]
-fn split_by() {
-    use super::x;
-    use crate::tests::test_resolver;
-
-    let split_by_char = |range_sel: LLSelection| {
-        range_sel
-            .split_by(&x::attr::<char>())
-            .into_iter()
-            .map(|sel| sel.finish_with_attr(String::from("here")))
-            .collect()
-    };
-
-    insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
-    0000  aa  0000  .  000  aa  000  .  0000  aa  0000
-    ╰────────────╯"here"
-                       ╰──────────╯"here"
-                                        ╰────────────╯"here"
-    "###);
-    insta::assert_display_snapshot!(test_resolver("0000aa0000...000aa000..0000aa0000", split_by_char), @r###"
-    0000  aa  0000  .  .  .  000  aa  000  .  .  0000  aa  0000
-    ╰────────────╯"here"
-                             ╰──────────╯"here"
-                                                 ╰────────────╯"here"
-    "###);
-    insta::assert_display_snapshot!(test_resolver(".0000aa0000.000aa000.0000aa0000.", split_by_char), @r###"
-    .  0000  aa  0000  .  000  aa  000  .  0000  aa  0000  .
-       ╰────────────╯"here"
-                          ╰──────────╯"here"
-                                           ╰────────────╯"here"
-    "###);
-    insta::assert_display_snapshot!(test_resolver(".00.", split_by_char), @r###"
-    .  00  .
-       ╰╯"here"
-    "###);
-    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
 }

@@ -1,8 +1,8 @@
+mod get_word_tag;
+
 use crate::ll_line::{LLLine, LLToken, LToken, TextTag};
 use crate::type_bucket::AnyAttribute;
 use unicode_segmentation::UnicodeSegmentation;
-
-mod get_word_tag;
 
 pub enum InputToken {
     Text {
@@ -36,6 +36,7 @@ impl InputToken {
     }
 }
 
+/// Splits the `InputToken`s and generate `TextTag`s.
 pub fn create_tokens<F>(input: Vec<InputToken>, get_text_size: F) -> LLLine
 where
     F: Fn(&str) -> usize,
@@ -43,15 +44,17 @@ where
     let mut start_idx_end_idx_attributes: Vec<(usize, usize, Vec<AnyAttribute>)> = Vec::new();
     let mut lltokens: Vec<LLToken> = Vec::new();
     let mut current_size = 0;
+
     for (ltokens, attrs) in input.into_iter().map(|input_token| match input_token {
         InputToken::Text { text, attrs } => {
             (create_tokens_for_string(&text, &get_text_size), attrs)
         }
         InputToken::Custom { size, attrs } => (vec![(LToken::Value, size)], attrs),
     }) {
-        if ltokens.is_empty() {
-            panic!("Cannot create a LLLine from empty String");
-        }
+        assert!(
+            !ltokens.is_empty(),
+            "Cannot create a LLLine from empty String"
+        );
 
         let from_idx = lltokens.len();
         for (ltoken, size) in ltokens {

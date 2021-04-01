@@ -1,6 +1,7 @@
-use crate::ll_line::{x, FinishWith, LLSelection};
+use rust_decimal::Decimal;
 
-use super::*;
+use super::{test_line, LLCursorAssignment, LLLineDisplay, Resolver, TextTag};
+use crate::ll_line::{x, FinishWith, LLSelection};
 
 #[derive(Clone, Debug)]
 enum CurrencySymbol {
@@ -41,8 +42,8 @@ impl Resolver for AmountResolver {
     fn go(&self, mut search_range_sel: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>> {
         let mut attrs = vec![];
 
-        while let Some((mut selection, (_, text))) = search_range_sel
-            .find_first_by(&x::any_of((x::attr_eq(&TextTag::NATN), x::token_text())))
+        while let Some((mut selection, (_, text))) =
+            search_range_sel.find_first_by(&x::all((x::attr_eq(&TextTag::NATN), x::token_text())))
         {
             let mut number_string = String::from(text);
             let mut last_valid_selection = None;
@@ -59,7 +60,7 @@ impl Resolver for AmountResolver {
                 }
 
                 if let Some((following_delimeter_sel, (_, text))) = selection
-                    .match_first_forwards(&x::any_of((x::attr_eq(&TextTag::NATN), x::token_text())))
+                    .match_first_forwards(&x::all((x::attr_eq(&TextTag::NATN), x::token_text())))
                 {
                     number_string.push_str(text);
                     last_valid_selection = None;
@@ -80,7 +81,7 @@ impl Resolver for AmountResolver {
                 }
 
                 if let Some((following_decimal_sel, ((), text))) = selection
-                    .match_first_forwards(&x::any_of((x::attr_eq(&TextTag::NATN), x::token_text())))
+                    .match_first_forwards(&x::all((x::attr_eq(&TextTag::NATN), x::token_text())))
                 {
                     number_string.push_str(text);
                     last_valid_selection = None;

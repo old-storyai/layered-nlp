@@ -12,16 +12,12 @@ static IS_SPACE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\s+$").unwrap());
 
 pub(crate) fn get_unicode_word_tag(word: &str) -> TextTag {
     if IS_SPACE.is_match(&word) {
-        return TextTag::SPACE;
+        TextTag::SPACE
+    } else if word.len() == 1 && PUNCTUATION.contains(&word.chars().next().unwrap()) {
+        TextTag::PUNC
+    } else if IS_WORD.is_match(&word) {
+        TextTag::WORD
+    } else {
+        TextTag::SYMB
     }
-
-    if word.len() == 1 && PUNCTUATION.contains(&word.chars().next().unwrap()) {
-        return TextTag::PUNC;
-    }
-
-    if IS_WORD.is_match(&word) {
-        return TextTag::WORD;
-    }
-
-    TextTag::SYMB
 }

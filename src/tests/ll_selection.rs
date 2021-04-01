@@ -1,14 +1,12 @@
 #[test]
 fn find_by() {
-    use crate::ll_line::{x, LLSelection};
+    use crate::ll_line::{x, FinishWith, LLSelection};
     use crate::tests::test_resolver;
 
     let split_by_char = |range_sel: LLSelection| {
         range_sel
             .find_by(&x::attr::<char>())
-            .into_iter()
-            .map(|(sel, _)| sel.finish_with_attr(String::from("here")))
-            .collect()
+            .finish_with(|_| String::from("here"))
     };
 
     insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
@@ -44,15 +42,13 @@ fn find_by() {
 
 #[test]
 fn find_first_by() {
-    use crate::ll_line::{x, LLSelection};
+    use crate::ll_line::{x, FinishWith, LLSelection};
     use crate::tests::test_resolver;
 
     let split_by_char = |range_sel: LLSelection| {
         range_sel
             .find_first_by(&x::attr::<char>())
-            .into_iter()
-            .map(|(sel, _)| sel.finish_with_attr(String::from("here")))
-            .collect()
+            .finish_with(|_| String::from("here"))
     };
 
     insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
@@ -117,15 +113,13 @@ fn split_by() {
 
 #[test]
 fn find_by_seq() {
-    use crate::ll_line::{x, LLSelection, TextTag};
+    use crate::ll_line::{x, FinishWith, LLSelection, TextTag};
     use crate::tests::test_resolver;
 
     let split_by_char = |range_sel: LLSelection| {
         range_sel
             .find_by(&x::seq((x::attr::<char>(), x::attr_eq(&TextTag::NATN))))
-            .into_iter()
-            .map(|(sel, _)| sel.finish_with_attr(String::from("here")))
-            .collect()
+            .finish_with(|_| String::from("here"))
     };
 
     insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
@@ -153,7 +147,7 @@ fn find_by_seq() {
 
 #[test]
 fn match_seq_forwards() {
-    use crate::ll_line::{x, LLSelection, TextTag};
+    use crate::ll_line::{x, FinishWith, LLSelection, TextTag};
     use crate::tests::test_resolver;
 
     let split_by_char = |range_sel: LLSelection| {
@@ -168,8 +162,7 @@ fn match_seq_forwards() {
             })
             .into_iter()
             .flatten()
-            .map(|(sel, _)| sel.finish_with_attr(String::from("here")))
-            .collect()
+            .finish_with(|_| String::from("here"))
     };
 
     insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
@@ -194,7 +187,7 @@ fn match_seq_forwards() {
 
 #[test]
 fn match_seq_backwards() {
-    use crate::ll_line::{x, LLSelection, TextTag};
+    use crate::ll_line::{x, FinishWith, LLSelection, TextTag};
     use crate::tests::test_resolver;
 
     let split_by_char = |range_sel: LLSelection| {
@@ -209,8 +202,7 @@ fn match_seq_backwards() {
             })
             .into_iter()
             .flatten()
-            .map(|(sel, _)| sel.finish_with_attr(String::from("here")))
-            .collect()
+            .finish_with(|_| String::from("here"))
     };
 
     insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
@@ -229,6 +221,150 @@ fn match_seq_backwards() {
                                ╰────────╯"here"
                                                  ╰─────────╯"here"
     "###);
+    insta::assert_display_snapshot!(test_resolver(".00.", split_by_char), @".  00  .");
+    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
+}
+
+#[test]
+fn one_of() {
+    use crate::ll_line::{x, LLSelection, TextTag};
+    use crate::tests::test_resolver;
+
+    let split_by_char = |range_sel: LLSelection| {
+        range_sel
+            .find_by(&x::attr_eq(&TextTag::NATN))
+            .into_iter()
+            .flat_map(|(sel, _)| Some(sel.match_first_forwards(&x::token_has_any(&['(', '.']))?.0))
+            .into_iter()
+            .map(|sel| sel.finish_with_attr(String::from("here")))
+            .collect()
+    };
+
+    insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  000  aa  000  .  0000  aa  0000
+              ╰─────╯"here"
+                                ╰────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver("0000aa0000...000aa000..0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  .  .  000  aa  000  .  .  0000  aa  0000
+              ╰─────╯"here"
+                                      ╰────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".0000aa0000.000aa000.0000aa0000.", split_by_char), @r###"
+    .  0000  aa  0000  .  000  aa  000  .  0000  aa  0000  .
+                 ╰─────╯"here"
+                                   ╰────╯"here"
+                                                     ╰─────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".00.", split_by_char), @r###"
+    .  00  .
+       ╰───╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
+}
+
+#[test]
+fn one_of_backwards() {
+    use crate::ll_line::{x, LLSelection, TextTag};
+    use crate::tests::test_resolver;
+
+    let split_by_char = |range_sel: LLSelection| {
+        range_sel
+            .find_by(&x::attr_eq(&TextTag::NATN))
+            .into_iter()
+            .flat_map(|(sel, _)| Some(sel.match_first_backwards(&x::token_has_any(&['(', '.']))?.0))
+            .into_iter()
+            .map(|sel| sel.finish_with_attr(String::from("here")))
+            .collect()
+    };
+
+    insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  000  aa  000  .  0000  aa  0000
+                    ╰────╯"here"
+                                     ╰─────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver("0000aa0000...000aa000..0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  .  .  000  aa  000  .  .  0000  aa  0000
+                          ╰────╯"here"
+                                              ╰─────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".0000aa0000.000aa000.0000aa0000.", split_by_char), @r###"
+    .  0000  aa  0000  .  000  aa  000  .  0000  aa  0000  .
+    ╰─────╯"here"
+                       ╰────╯"here"
+                                        ╰─────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".00.", split_by_char), @r###"
+    .  00  .
+    ╰───╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
+}
+
+#[test]
+fn one_of_seq() {
+    use crate::ll_line::{x, LLSelection, TextTag};
+    use crate::tests::test_resolver;
+
+    let split_by_char = |range_sel: LLSelection| {
+        range_sel
+            .find_by(&x::attr_eq(&TextTag::NATN))
+            .into_iter()
+            .flat_map(|(sel, _)| {
+                Some(
+                    sel.match_first_forwards(&x::seq((
+                        x::token_has_any(&['(', '.']),
+                        x::attr_eq(&TextTag::PUNC),
+                    )))?
+                    .0,
+                )
+            })
+            .into_iter()
+            .map(|sel| sel.finish_with_attr(String::from("here")))
+            .collect()
+    };
+
+    insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @"0000  aa  0000  .  000  aa  000  .  0000  aa  0000");
+    insta::assert_display_snapshot!(test_resolver("0000aa0000...000aa000..0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  .  .  000  aa  000  .  .  0000  aa  0000
+              ╰────────╯"here"
+                                      ╰───────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".0000aa0000.000aa000.0000aa0000.", split_by_char), @".  0000  aa  0000  .  000  aa  000  .  0000  aa  0000  .");
+    insta::assert_display_snapshot!(test_resolver(".00.", split_by_char), @".  00  .");
+    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
+}
+
+#[test]
+fn one_of_seq_backwards() {
+    use crate::ll_line::{x, LLSelection, TextTag};
+    use crate::tests::test_resolver;
+
+    let split_by_char = |range_sel: LLSelection| {
+        range_sel
+            .find_by(&x::attr_eq(&TextTag::NATN))
+            .into_iter()
+            .flat_map(|(sel, _)| {
+                Some(
+                    sel.match_first_backwards(&x::seq((
+                        x::token_has_any(&['(', '.']),
+                        x::attr_eq(&TextTag::PUNC),
+                    )))?
+                    .0,
+                )
+            })
+            .into_iter()
+            .map(|sel| sel.finish_with_attr(String::from("here")))
+            .collect()
+    };
+
+    insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @"0000  aa  0000  .  000  aa  000  .  0000  aa  0000");
+    insta::assert_display_snapshot!(test_resolver("0000aa0000...000aa000..0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  .  .  000  aa  000  .  .  0000  aa  0000
+                       ╰───────╯"here"
+                                           ╰────────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".0000aa0000.000aa000.0000aa0000.", split_by_char), @".  0000  aa  0000  .  000  aa  000  .  0000  aa  0000  .");
     insta::assert_display_snapshot!(test_resolver(".00.", split_by_char), @".  00  .");
     insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
 }

@@ -1,10 +1,12 @@
 [package]
-name = "layered-examples"
+name = "layered-clauses"
 version = "0.1.0"
 authors = ["leudz <dylan.ancel@gmail.com>"]
 edition = "2018"
 
-[dev-dependencies]
+[dependencies]
 layered-nlp = { path = ".." }
-insta = "1.7.0"
+
+[dev-dependencies]
+insta = "1.7.1"
 layered-part-of-speech = { path = "../layered-part-of-speech" }

@@ -4,10 +4,11 @@ use std::fmt::Debug;
 use crate::{x, Resolver};
 
 /// Useful for name matching
-struct TextMatchAssignResolver<T: Clone> {
+pub struct TextMatchAssignResolver<T: Clone> {
     // $ tokens $$ text with spaces $$$ regex?
     lookup: HashMap<String, Vec<T>>,
 }
+
 impl<T: Debug + Clone + 'static> Resolver for TextMatchAssignResolver<T> {
     type Attr = T;
 

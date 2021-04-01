@@ -1,16 +1,17 @@
 #![allow(dead_code)]
 
+use std::collections::hash_map;
+use std::marker::PhantomData;
 use std::{
     any::{Any, TypeId},
     collections::HashMap,
     fmt::{self, Debug},
 };
 
-use std::collections::hash_map;
-use std::marker::PhantomData;
-
 /// Prepared key-value pair
-pub struct AnyAttribute(TypeId, Box<dyn Storage>, Box<dyn Any>);
+// `Box<dyn Bucket>` is the empty bucket for this type.
+// It is required to add a type not present in `TypeBucket`.
+pub struct AnyAttribute(TypeId, Box<dyn Bucket>, Box<dyn Any>);
 
 impl std::fmt::Debug for AnyAttribute {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -28,12 +29,13 @@ impl AnyAttribute {
     }
 
     pub fn extract<T: 'static>(self) -> Result<T, Self> {
-        let AnyAttribute(key, empty_value, value) = self;
+        let AnyAttribute(key, empty_bucket, value) = self;
         value
             .downcast()
             .map(|boxed| *boxed)
-            .map_err(|e| AnyAttribute(key, empty_value, e))
+            .map_err(|e| AnyAttribute(key, empty_bucket, e))
     }
+
     pub fn type_id(&self) -> TypeId {
         self.0
     }
@@ -120,22 +122,21 @@ impl<'a, T: 'static> Entry<'a, T> {
 }
 
 #[derive(Debug, Default)]
-/// The typeBucket container
+/// The TypeBucket container
 pub struct TypeBucket {
-    // dyn Any is always a Vec<T> where T is TypeId
+    // dyn Bucket is always a Vec<T>
     // Box<Vec<T>>
-    // Box<dyn Any>
-    // Box<dyn Storage>
-    map: HashMap<TypeId, Box<dyn Storage>>,
+    // Box<dyn Bucket>
+    map: HashMap<TypeId, Box<dyn Bucket>>,
 }
 
-impl fmt::Debug for dyn Storage {
+impl fmt::Debug for dyn Bucket {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        Storage::debug(self, f)
+        Bucket::debug(self, f)
     }
 }
 
-trait Storage {
+trait Bucket {
     fn as_any(&self) -> &dyn Any
     where
         Self: 'static;
@@ -144,7 +145,7 @@ trait Storage {
         Self: 'static;
     fn insert_any(&mut self, val: Box<dyn Any>);
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.pad("Storage")
+        f.pad("Bucket")
     }
     fn default() -> Self
     where
@@ -154,19 +155,13 @@ trait Storage {
     }
 }
 
-impl<T: 'static + Debug> Storage for Vec<T> {
+impl<T: 'static + Debug> Bucket for Vec<T> {
     #[inline]
-    fn as_any(&self) -> &dyn Any
-    where
-        Self: 'static,
-    {
+    fn as_any(&self) -> &dyn Any {
         self
     }
     #[inline]
-    fn as_any_mut(&mut self) -> &mut dyn Any
-    where
-        Self: 'static,
-    {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
     fn insert_any(&mut self, val: Box<dyn Any>) {
@@ -175,16 +170,6 @@ impl<T: 'static + Debug> Storage for Vec<T> {
 
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Debug::fmt(self, f)
-    }
-}
-
-trait StorageInfo {
-    fn size(&self) -> usize;
-}
-
-impl<T: 'static + Sized> StorageInfo for T {
-    fn size(&self) -> usize {
-        std::mem::size_of::<T>()
     }
 }
 
@@ -200,7 +185,6 @@ impl TypeBucket {
     /// Insert a prepared `KvPair` into this `TypeBucket`.
     ///
     /// If a value of this type already exists, it will be returned.
-    #[track_caller]
     pub fn insert_any_attribute(&mut self, AnyAttribute(key, empty_value, value): AnyAttribute) {
         self.map.entry(key).or_insert(empty_value).insert_any(value)
     }
