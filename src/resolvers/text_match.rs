@@ -9,6 +9,14 @@ pub struct TextMatchAssignResolver<T: Clone> {
     lookup: HashMap<String, Vec<T>>,
 }
 
+impl<T: Clone> TextMatchAssignResolver<T> {
+    pub fn new(lookup: HashMap<String, Vec<T>>) -> Self {
+        TextMatchAssignResolver {
+            lookup,
+        }
+    }
+}
+
 impl<T: Debug + Clone + 'static> Resolver for TextMatchAssignResolver<T> {
     type Attr = T;
 
@@ -17,7 +25,7 @@ impl<T: Debug + Clone + 'static> Resolver for TextMatchAssignResolver<T> {
             .find_by(&x::token_text())
             .into_iter()
             .flat_map(|(selection, text)| {
-                self.lookup.get(text).map(|values| {
+                self.lookup.get(&text.to_lowercase()).map(|values| {
                     values
                         .iter()
                         .cloned()

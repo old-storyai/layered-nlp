@@ -24,7 +24,7 @@ impl<A, B, C> AnyOf for (A, B, C) {
 
 pub struct AnyOf2Matcher<A, B>(pub A, pub B);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AnyOf2<A, B> {
     A(A),
     B(B),
@@ -53,7 +53,7 @@ impl<'l, A: XMatch<'l>, B: XMatch<'l>> XMatch<'l> for AnyOf2Matcher<A, B> {
 
 pub struct AnyOf3Matcher<A, B, C>(pub A, pub B, pub C);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AnyOf3<A, B, C> {
     A(A),
     B(B),

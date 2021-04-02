@@ -1,4 +1,3 @@
-mod as_tokens;
 mod display;
 mod finish_with;
 mod ll_selection;
@@ -10,11 +9,11 @@ pub use ll_selection::LLSelection;
 use crate::type_bucket::{self, AnyAttribute};
 use crate::type_id_to_many::TypeIdToMany;
 pub use display::LLLineDisplay;
-use std::fmt::Write;
+use std::fmt::{self, Write};
 use std::iter::FromIterator;
 use std::{collections::HashMap, rc::Rc};
-use x::XMatch;
 pub use x::{Attr, AttrEq};
+use x::{XForwards, XMatch};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum TextTag {
@@ -44,16 +43,44 @@ pub struct LLToken {
 
 /// (starts at, ends at) token indexes
 type LRange = (usize, usize);
+/// (starts at, ends at) token positions
+type PositionRange = (usize, usize);
 
 struct LLLineAttrs {
     // "bi-map" / "tri-map"
     ranges: TypeIdToMany<LRange>,
-    /// match_forwards uses [LLCursor::end]
+    /// match_forwards uses [LLSelection::end_idx]
     starts_at: Vec<TypeIdToMany<LRange>>,
-    /// match_backwards uses [LLCursor::start]
+    /// match_backwards uses [LLSelection::start_idx]
     ends_at: Vec<TypeIdToMany<LRange>>,
     values: HashMap<LRange, type_bucket::TypeBucket>,
 }
+
+pub struct LLLineFind<'l, Found> {
+    start_pos_at: usize,
+    end_pos_at: usize,
+    found: Found,
+    _phantom: std::marker::PhantomData<&'l ()>,
+}
+
+impl<'l, Found: fmt::Debug> fmt::Debug for LLLineFind<'l, Found> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("LLLineFind")
+            .field("start", &self.start_pos_at)
+            .field("end", &self.end_pos_at)
+            .field("found", &self.found)
+            .finish()
+    }
+}
+
+impl<'l, Found> LLLineFind<'l, Found> {
+    pub fn range(&self) -> PositionRange {
+        (self.start_pos_at, self.end_pos_at)
+    }
+    pub fn attr(&self) -> &Found {
+        &self.found
+    }
+} 
 
 /// TODO: insert [TextTag]s into the ranges
 pub struct LLLine {
@@ -159,6 +186,39 @@ impl LLLine {
     /// Get a reference to the ll line's ll tokens.
     pub fn ll_tokens(&self) -> &[LLToken] {
         &self.ll_tokens
+    }
+
+    /// Returns Attributes' information outside `LLLine`
+    /// "find"
+    pub fn find<'l, M: XMatch<'l>>(&'l self, matcher: &M) -> Vec<LLLineFind<'l, M::Out>> {
+        (0..self.ll_tokens.len())
+            .flat_map(|i| {
+                let forwards = XForwards { from_idx: i };
+
+                matcher
+                    .go(&forwards, &self)
+                    .into_iter()
+                    .map(move |(out, next_idx)| LLLineFind {
+                        start_pos_at: self.pos_start_at(i),
+                        end_pos_at: self.pos_end_at(next_idx.0),
+                        found: out,
+                        _phantom: std::marker::PhantomData,
+                    })
+            })
+            .collect()
+    }
+
+    fn pos_end_at(&self, idx: usize) -> usize {
+        self.ll_tokens
+            .get(idx)
+            .expect("pos_end_at in bounds")
+            .pos_ends_at
+    }
+    fn pos_start_at(&self, idx: usize) -> usize {
+        self.ll_tokens
+            .get(idx)
+            .expect("pos_start_at in bounds")
+            .pos_starts_at
     }
 
     /// Returns Attributes' information outside `LLLine`

@@ -23,6 +23,9 @@ pub trait XMatch<'l> {
     /// Usually must be [Copy] so it's compatible with any multi-matchers.
     /// The Out must be copied in the event of "cartesian" product scenarios where multi-matchers
     /// return multiple combinations of their inner matchers' Out.
+    ///
+    /// This usually isn't a big deal to implement, since most Out values will be a reference
+    /// like `&'l Tag`, and all references in Rust are [Copy].
     type Out: Copy;
 
     fn go<M>(&self, direction: &M, ll_line: &'l LLLine) -> Vec<(Self::Out, ToIdx)>
