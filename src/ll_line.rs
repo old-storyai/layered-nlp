@@ -80,7 +80,7 @@ impl<'l, Found> LLLineFind<'l, Found> {
     pub fn attr(&self) -> &Found {
         &self.found
     }
-} 
+}
 
 /// TODO: insert [TextTag]s into the ranges
 pub struct LLLine {

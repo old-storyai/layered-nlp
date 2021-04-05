@@ -5,6 +5,7 @@ use crate::{x, Resolver};
 
 /// Useful for name matching
 pub struct TextMatchAssignResolver<T: Clone> {
+    case_sensitive: bool,
     // $ tokens $$ text with spaces $$$ regex?
     lookup: HashMap<String, Vec<T>>,
 }
@@ -12,7 +13,17 @@ pub struct TextMatchAssignResolver<T: Clone> {
 impl<T: Clone> TextMatchAssignResolver<T> {
     pub fn new(lookup: HashMap<String, Vec<T>>) -> Self {
         TextMatchAssignResolver {
+            case_sensitive: true,
             lookup,
+        }
+    }
+    pub fn new_case_insensitive(lookup: HashMap<String, Vec<T>>) -> Self {
+        TextMatchAssignResolver {
+            case_sensitive: false,
+            lookup: lookup
+                .into_iter()
+                .map(|(key, val)| (key.to_lowercase(), val))
+                .collect(),
         }
     }
 }
@@ -25,7 +36,12 @@ impl<T: Debug + Clone + 'static> Resolver for TextMatchAssignResolver<T> {
             .find_by(&x::token_text())
             .into_iter()
             .flat_map(|(selection, text)| {
-                self.lookup.get(&text.to_lowercase()).map(|values| {
+                if self.case_sensitive {
+                    self.lookup.get(text)
+                } else {
+                    self.lookup.get(&text.to_lowercase())
+                }
+                .map(|values| {
                     values
                         .iter()
                         .cloned()
@@ -57,8 +73,8 @@ fn test() {
         |text| text.encode_utf16().count(),
     );
 
-    let ll_line = ll_line.run(&TextMatchAssignResolver {
-        lookup: [
+    let ll_line = ll_line.run(&TextMatchAssignResolver::new_case_insensitive({
+        [
             ("Slack".to_string(), vec![Service::Slack]),
             ("Algolia".to_string(), vec![Service::Algolia]),
             ("Magic".to_string(), vec![Service::Magic]),
@@ -66,8 +82,8 @@ fn test() {
         ]
         .iter()
         .cloned()
-        .collect(),
-    });
+        .collect()
+    }));
 
     let mut ll_display = LLLineDisplay::new(&ll_line);
     ll_display.include::<Service>();

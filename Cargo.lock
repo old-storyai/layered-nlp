@@ -188,8 +188,6 @@ dependencies = [
 name = "layered-part-of-speech"
 version = "0.1.0"
 dependencies = [
- "fst",
- "insta",
  "layered-nlp",
  "wiktionary-part-of-speech-extract",
 ]
@@ -471,6 +469,8 @@ checksum = "fd6fbd9a79829dd1ad0cc20627bf1ed606756a7f77edff7b66b7064f9cb327c6"
 [[package]]
 name = "wiktionary-part-of-speech-extract"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ada516939d5014e0a3ccec652c68f6d25f6e6cf4d792ed4f38c50b92abbf15e"
 dependencies = [
  "fst",
  "once_cell",
