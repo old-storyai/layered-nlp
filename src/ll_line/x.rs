@@ -11,7 +11,7 @@ pub use all::{All, All2, All3};
 pub use any_of::{AnyOf, AnyOf2, AnyOf2Matcher, AnyOf3, AnyOf3Matcher};
 pub use attr::Attr;
 pub use attr_eq::AttrEq;
-pub use functions::{all, any_of, attr, attr_eq, seq, token_has_any, token_text};
+pub use functions::{all, any_of, attr, attr_eq, seq, token_has_any, token_text, whitespace};
 pub use seq::{Seq, Seq2, Seq3};
 pub use token_has_any::TokenHasAny;
 pub use token_text::TokenText;

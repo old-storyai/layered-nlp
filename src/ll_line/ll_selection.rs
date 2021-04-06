@@ -303,6 +303,67 @@ impl LLSelection {
         ]
     }
 
+    /// Private impl which makes it easier to reuse this logic without facing borrowing issues
+    fn trim_selection<'a, M: XMatch<'a>>(
+        &'a self,
+        matcher: &M,
+        from_start: bool,
+        from_end: bool,
+    ) -> Option<LLSelection> {
+        let mut new_start = self.start_idx;
+        let mut new_end = self.end_idx;
+
+        if from_start {
+            if let Some(first_match) = matcher
+                .go(
+                    &XForwards {
+                        from_idx: self.start_idx,
+                    },
+                    &self.ll_line,
+                )
+                .first()
+            {
+                new_start = (first_match.1).0 + 1;
+            }
+        }
+
+        if from_end {
+            if let Some(first_match) = matcher
+                .go(
+                    &XBackwards {
+                        from_idx: self.end_idx,
+                    },
+                    &self.ll_line,
+                )
+                .first()
+            {
+                new_end = (first_match.1).0.checked_sub(1)?;
+            }
+        }
+
+        if new_end > self.start_idx && new_start < new_end {
+            Some(LLSelection {
+                ll_line: self.ll_line.clone(),
+                start_idx: new_start,
+                end_idx: new_end,
+            })
+        } else {
+            None
+        }
+    }
+
+    pub fn trim_start<'a, M: XMatch<'a>>(&'a self, matcher: &M) -> Option<LLSelection> {
+        self.trim_selection(matcher, true, false)
+    }
+
+    pub fn trim_end<'a, M: XMatch<'a>>(&'a self, matcher: &M) -> Option<LLSelection> {
+        self.trim_selection(matcher, false, true)
+    }
+
+    pub fn trim<'a, M: XMatch<'a>>(&'a self, matcher: &M) -> Option<LLSelection> {
+        self.trim_selection(matcher, true, true)
+    }
+
     pub fn finish_with_attr<Attr>(&self, value: Attr) -> LLCursorAssignment<Attr> {
         LLCursorAssignment {
             end_idx: self.end_idx,

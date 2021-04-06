@@ -368,3 +368,99 @@ fn one_of_seq_backwards() {
     insta::assert_display_snapshot!(test_resolver(".00.", split_by_char), @".  00  .");
     insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
 }
+
+#[test]
+fn trim_start() {
+    use crate::ll_line::{x, LLSelection, TextTag};
+    use crate::tests::test_resolver;
+
+    let split_by_char = |range_sel: LLSelection| {
+        range_sel
+            .trim_start(&x::attr_eq(&TextTag::NATN))
+            .into_iter()
+            .map(|sel| sel.finish_with_attr(String::from("here")))
+            .collect()
+    };
+
+    insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  000  aa  000  .  0000  aa  0000
+          ╰──────────────────────────────────────────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver("0000aa0000...000aa000..0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  .  .  000  aa  000  .  .  0000  aa  0000
+          ╰───────────────────────────────────────────────────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".0000aa0000.000aa000.0000aa0000.", split_by_char), @r###"
+    .  0000  aa  0000  .  000  aa  000  .  0000  aa  0000  .
+    ╰──────────────────────────────────────────────────────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".00.", split_by_char), @r###"
+    .  00  .
+    ╰──────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
+}
+
+#[test]
+fn trim_end() {
+    use crate::ll_line::{x, LLSelection, TextTag};
+    use crate::tests::test_resolver;
+
+    let split_by_char = |range_sel: LLSelection| {
+        range_sel
+            .trim_end(&x::attr_eq(&TextTag::NATN))
+            .into_iter()
+            .map(|sel| sel.finish_with_attr(String::from("here")))
+            .collect()
+    };
+
+    insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  000  aa  000  .  0000  aa  0000
+    ╰──────────────────────────────────────────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver("0000aa0000...000aa000..0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  .  .  000  aa  000  .  .  0000  aa  0000
+    ╰───────────────────────────────────────────────────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".0000aa0000.000aa000.0000aa0000.", split_by_char), @r###"
+    .  0000  aa  0000  .  000  aa  000  .  0000  aa  0000  .
+    ╰──────────────────────────────────────────────────────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".00.", split_by_char), @r###"
+    .  00  .
+    ╰──────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
+}
+
+#[test]
+fn trim() {
+    use crate::ll_line::{x, LLSelection, TextTag};
+    use crate::tests::test_resolver;
+
+    let split_by_char = |range_sel: LLSelection| {
+        range_sel
+            .trim(&x::attr_eq(&TextTag::NATN))
+            .into_iter()
+            .map(|sel| sel.finish_with_attr(String::from("here")))
+            .collect()
+    };
+
+    insta::assert_display_snapshot!(test_resolver("0000aa0000.000aa000.0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  000  aa  000  .  0000  aa  0000
+          ╰────────────────────────────────────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver("0000aa0000...000aa000..0000aa0000", split_by_char), @r###"
+    0000  aa  0000  .  .  .  000  aa  000  .  .  0000  aa  0000
+          ╰─────────────────────────────────────────────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".0000aa0000.000aa000.0000aa0000.", split_by_char), @r###"
+    .  0000  aa  0000  .  000  aa  000  .  0000  aa  0000  .
+    ╰──────────────────────────────────────────────────────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".00.", split_by_char), @r###"
+    .  00  .
+    ╰──────╯"here"
+    "###);
+    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
+}

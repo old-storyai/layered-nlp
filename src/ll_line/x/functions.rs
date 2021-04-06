@@ -1,4 +1,5 @@
 use super::*;
+use crate::TextTag;
 
 /// Match if one of the matchers match
 pub fn any_of<T: AnyOf>(tuple: T) -> T::Out {
@@ -41,4 +42,9 @@ pub fn token_has_any<A: PartialEq>(attrs: &[A]) -> TokenHasAny<'_, A> {
 /// Match token with `A` attributes
 pub fn attr<A>() -> Attr<A> {
     Attr(Default::default())
+}
+
+/// Match any number of consecutive spaces.
+pub fn whitespace() -> AttrEq<'static, TextTag> {
+    attr_eq(&TextTag::SPACE)
 }

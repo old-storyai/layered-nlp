@@ -11,7 +11,7 @@ fn test_setup(sentence: &'static str) -> LLLine {
 
 #[test]
 fn test_clauses() {
-    let ll_line = test_setup("When it rains then it pours.")
+    let ll_line = test_setup("When it rains, then it pours.")
         .run(&ClauseKeywordResolver::new(
             &["if", "when"],
             &["and"],
@@ -24,11 +24,11 @@ fn test_clauses() {
     ll_line_display.include::<Clause>();
 
     insta::assert_display_snapshot!(ll_line_display, @r###"
-    When     it     rains     then     it     pours  .
+    When     it     rains  ,     then     it     pours  .
     ╰──╯ConditionStart
-                              ╰──╯Then
-    ╰──────────────────────╯Condition
-                              ╰───────────────────╯TrailingEffect
+                                 ╰──╯Then
+    ╰───────────────────╯Condition
+                                 ╰───────────────────╯TrailingEffect
     "###);
 }
 
@@ -52,7 +52,7 @@ fn test_clauses_comma() {
     If     it     is     raining  ,     open     your     umbrella  .
     ╰╯ConditionStart
     ╰──────────────────────────╯Condition
-                                     ╰───────────────────────────╯TrailingEffect
+                                        ╰────────────────────────╯TrailingEffect
     ╰╯Noun
     ╰╯Conjunction
            ╰╯Pronoun
@@ -87,7 +87,7 @@ fn tired() {
     Si     tu     es     fatigué  ,     va     te     coucher  .
     ╰╯ConditionStart
     ╰──────────────────────────╯Condition
-                                     ╰──────────────────────╯TrailingEffect
+                                        ╰───────────────────╯TrailingEffect
     "###);
 }
 
@@ -104,7 +104,7 @@ fn tired_rev() {
     insta::assert_display_snapshot!(ll_line_display, @r###"
     Va     te     coucher     si     tu     es     fatigué  .
                               ╰╯ConditionStart
-    ╰──────────────────────╯LeadingEffect
+    ╰───────────────────╯LeadingEffect
                               ╰──────────────────────────╯Condition
     "###);
 }
@@ -130,9 +130,9 @@ fn rain() {
                                      ╰──╯Then
                                                                             ╰─╯And
                                                                                                                  ╰─╯And
-    ╰─────────────────────────────╯Condition
-                                     ╰───────────────────────────────────╯TrailingEffect
-                                                                            ╰─────────────────────────────────╯TrailingEffect
+    ╰──────────────────────────╯Condition
+                                     ╰────────────────────────────────╯TrailingEffect
+                                                                            ╰──────────────────────────────╯TrailingEffect
                                                                                                                  ╰──────────────────╯TrailingEffect
     "###
     );
@@ -158,9 +158,9 @@ fn rain_rev() {
                                   ╰─╯And
                                                                        ╰─╯And
                                                                                                 ╰╯ConditionStart
-    ╰──────────────────────────╯LeadingEffect
-                                  ╰─────────────────────────────────╯LeadingEffect
-                                                                       ╰─────────────────────╯LeadingEffect
+    ╰───────────────────────╯LeadingEffect
+                                  ╰──────────────────────────────╯LeadingEffect
+                                                                       ╰──────────────────╯LeadingEffect
                                                                                                 ╰──────────────────────────╯Condition
     "###
     );
@@ -184,8 +184,8 @@ fn extra_rain() {
     Open     the     umbrella     if     it     is     raining     and     not     too     windy  .
                                   ╰╯ConditionStart
                                                                    ╰─╯And
-    ╰──────────────────────────╯LeadingEffect
-                                  ╰─────────────────────────────╯Condition
+    ╰───────────────────────╯LeadingEffect
+                                  ╰──────────────────────────╯Condition
                                                                    ╰───────────────────────────╯TrailingEffect
     "###
     );
