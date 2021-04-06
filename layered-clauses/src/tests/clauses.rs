@@ -33,6 +33,28 @@ fn test_clauses() {
 }
 
 #[test]
+fn test_short_clauses() {
+    let ll_line = test_setup("When it rains, run!")
+        .run(&ClauseKeywordResolver::new(
+            &["if", "when"],
+            &["and"],
+            &["then"],
+        ))
+        .run(&ClauseResolver::default());
+
+    let mut ll_line_display = LLLineDisplay::new(&ll_line);
+    ll_line_display.include::<ClauseKeyword>();
+    ll_line_display.include::<Clause>();
+
+    insta::assert_display_snapshot!(ll_line_display, @r###"
+    When     it     rains  ,     run  !
+    ╰──╯ConditionStart
+    ╰───────────────────╯Condition
+                                 ╰─╯TrailingEffect
+    "###);
+}
+
+#[test]
 fn test_clauses_comma() {
     let ll_line = test_setup("If it is raining, open your umbrella.")
         .run(&POSTagResolver::default())

@@ -337,11 +337,14 @@ impl LLSelection {
                 )
                 .first()
             {
-                new_end = (first_match.1).0.checked_sub(1)?;
+                new_end = (first_match.1)
+                    .0
+                    .checked_sub(1)
+                    .unwrap_or((first_match.1).0);
             }
         }
 
-        if new_end > self.start_idx && new_start < new_end {
+        if new_end >= self.start_idx && new_start <= new_end {
             Some(LLSelection {
                 ll_line: self.ll_line.clone(),
                 start_idx: new_start,

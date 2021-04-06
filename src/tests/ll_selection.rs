@@ -398,7 +398,10 @@ fn trim_start() {
     .  00  .
     ╰──────╯"here"
     "###);
-    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
+    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @r###"
+    .
+    ╰"here"
+    "###);
 }
 
 #[test]
@@ -430,7 +433,10 @@ fn trim_end() {
     .  00  .
     ╰──────╯"here"
     "###);
-    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
+    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @r###"
+    .
+    ╰"here"
+    "###);
 }
 
 #[test]
@@ -462,5 +468,8 @@ fn trim() {
     .  00  .
     ╰──────╯"here"
     "###);
-    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @".");
+    insta::assert_display_snapshot!(test_resolver(".", split_by_char), @r###"
+    .
+    ╰"here"
+    "###);
 }
