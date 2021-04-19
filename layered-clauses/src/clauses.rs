@@ -47,11 +47,12 @@ impl Resolver for ClauseResolver {
                     // The first clause can only be a `Condition` or `LeadingEffect` based on if it is preceded by a `ConditionStart` or not
                     // The other clauses are either `LeadingEffect` if they are before the `ConditionStart` or `TrailingEffect` if they are after
                     if let Some(first_clause_sel) = clause_iter.next() {
-                        if let Some((first_clause_and_keyword_sel, _)) = first_clause_sel
+                        if first_clause_sel
                             .match_first_backwards(&x::attr_eq(&ClauseKeyword::ConditionStart))
+                            .is_some()
                         {
                             clauses.push(
-                                first_clause_and_keyword_sel
+                                first_clause_sel
                                     .trim(&x::whitespace())?
                                     .finish_with_attr(Clause::Condition),
                             );
@@ -59,9 +60,6 @@ impl Resolver for ClauseResolver {
                             clauses.extend(clause_iter.filter_map(|clause_sel| {
                                 Some(
                                     clause_sel
-                                        .match_first_backwards(&x::attr::<ClauseKeyword>())
-                                        .map(|(selection, _)| selection)
-                                        .unwrap_or(clause_sel)
                                         .trim(&x::whitespace())?
                                         .finish_with_attr(Clause::TrailingEffect),
                                 )
@@ -69,12 +67,7 @@ impl Resolver for ClauseResolver {
                         } else {
                             clauses.extend(
                                 std::iter::once(first_clause_sel)
-                                    .chain(clause_iter.map(|clause_sel| {
-                                        clause_sel
-                                            .match_first_backwards(&x::attr::<ClauseKeyword>())
-                                            .map(|(selection, _)| selection)
-                                            .unwrap_or(clause_sel)
-                                    }))
+                                    .chain(clause_iter)
                                     .filter_map(|clause_sel| {
                                         Some(
                                             clause_sel
