@@ -1,11 +1,28 @@
+# When releasing to crates.io:
+# - Remove path dependencies
+# - Update html_root_url.
+# - Update doc url
+#   - Cargo.toml
+#   - README.md
+# - Create "v0.1.x" git tag
 [package]
 authors = [
   "Cole Lawrence <cole@colelawrence.com>",
   "Dylan Ancel (leudz) <dylan.ancel@gmail.com>",
+  "Story.ai Team <team@story.ai>",
 ]
 edition = "2018"
 name = "layered-nlp"
 version = "0.1.0"
+description = "Highly-flexible data-oriented NLP framework"
+license = "MIT OR Apache-2.0"
+categories = [
+    "text-processing",
+    "text-editors",
+    "parsing",
+    "wasm",
+]
+keywords = ["nlp", "tokens", "framework", "grammar", "wasm"]
 
 [workspace]
 members = ["examples", "layered-part-of-speech", "layered-clauses"]
