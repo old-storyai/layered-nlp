@@ -1,4 +1,4 @@
-# layered-nlp
+![Layered NLP](./assets/layered-nlp.svg)
 
 Incrementally build up recognizers over an abstract token that combine to create _multiple_ possible interpretations.
 
