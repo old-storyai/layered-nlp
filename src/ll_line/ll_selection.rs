@@ -1,6 +1,8 @@
 use super::x::{XBackwards, XForwards};
 use super::{assert_ll_lines_equals, LLCursorAssignment, LLLine, Rc, XMatch};
 
+// # List of operations
+//
 // Cutting Selection (selection) -> Iter<selection>
 //  - split_by_x             :: [aaaxaaaxaaa] -> [aaa]x[aaa]x[aaa]
 //  - find_by_x              :: [aaaxaaaxaaa] -> aaa[x]aaa[x]aaa

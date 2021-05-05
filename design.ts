@@ -1,6 +1,0 @@
-// @ts-nocheck
-
-
-num  num
-.
-,

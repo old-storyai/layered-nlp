@@ -1,5 +1,8 @@
 [package]
-authors = ["Cole Lawrence <cole@colelawrence.com>"]
+authors = [
+  "Cole Lawrence <cole@colelawrence.com>",
+  "Dylan Ancel (leudz) <dylan.ancel@gmail.com>",
+]
 edition = "2018"
 name = "layered-nlp"
 version = "0.1.0"

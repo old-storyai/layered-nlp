@@ -46,6 +46,7 @@ type LRange = (usize, usize);
 /// (starts at, ends at) token positions
 type PositionRange = (usize, usize);
 
+/// Top-level
 struct LLLineAttrs {
     // "bi-map" / "tri-map"
     ranges: TypeIdToMany<LRange>,
