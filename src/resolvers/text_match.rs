@@ -28,6 +28,15 @@ impl<T: Clone> TextMatchAssignResolver<T> {
                 .collect(),
         }
     }
+    pub fn new_case_insensitive_str_arr<const N: usize>(lookup: [(&'static str, T); N]) -> Self {
+        TextMatchAssignResolver {
+            case_sensitive: false,
+            lookup: lookup
+                .iter()
+                .map(|(key, val)| (key.to_lowercase(), vec![val.clone()]))
+                .collect(),
+        }
+    }
 }
 
 impl<T: Debug + Clone + 'static> Resolver for TextMatchAssignResolver<T> {
