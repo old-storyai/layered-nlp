@@ -21,7 +21,7 @@ categories = [
     "parsing",
     "wasm",
 ]
-keywords = ["layered-nlp", "nlp", "tokens", "framework", "grammar", "wasm"]
+keywords = ["layered-nlp", "nlp", "tokens", "grammar", "wasm"]
 
 
 [dependencies]
