@@ -3,7 +3,9 @@ use std::fmt::Debug;
 
 use crate::{x, Resolver};
 
-/// Useful for name matching
+/// Useful for name matching.
+///
+/// Simple resolver for mapping a string matching a single token to an attribute.
 pub struct TextMatchAssignResolver<T: Clone> {
     case_sensitive: bool,
     // $ tokens $$ text with spaces $$$ regex?
@@ -55,7 +57,7 @@ impl<T: Debug + Clone + 'static> Resolver for TextMatchAssignResolver<T> {
 
 #[test]
 fn test() {
-    use crate::{create_tokens, InputToken, LLLineDisplay};
+    use crate::{create_line_from_input_tokens, InputToken, LLLineDisplay};
 
     #[derive(Debug, Clone)]
     enum Service {
@@ -65,7 +67,7 @@ fn test() {
         Wolfram,
     }
 
-    let ll_line = create_tokens(
+    let ll_line = create_line_from_input_tokens(
         vec![
             InputToken::text("when Slack hears a message in #general".to_string(), vec![]),
             InputToken::text("Algolia search query: message, table".to_string(), vec![]),

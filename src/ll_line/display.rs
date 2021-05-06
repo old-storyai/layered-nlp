@@ -101,7 +101,7 @@ impl<'a> LLLineDisplay<'a> {
         }
     }
     // TODO consider making this method take and return `self`
-    pub fn include<T: 'static + std::fmt::Debug + Clone>(&mut self) {
+    pub fn include<T: 'static + std::fmt::Debug>(&mut self) {
         for ll_range in self.ll_line.attrs.ranges.get::<T>() {
             for debug_value in self
                 .ll_line
@@ -115,5 +115,10 @@ impl<'a> LLLineDisplay<'a> {
                 self.include_attrs.push((*ll_range, debug_value));
             }
         }
+    }
+    /// Takes self
+    pub fn with<T: 'static + std::fmt::Debug>(mut self) -> Self {
+        self.include::<T>();
+        self
     }
 }

@@ -8,7 +8,8 @@ use std::{
     fmt::{self, Debug},
 };
 
-/// Prepared key-value pair
+/// Prepared key-value pair used to specify a custom attribute for input tokens
+/// and is used internally for collecting attribute assignments.
 // `Box<dyn Bucket>` is the empty bucket for this type.
 // It is required to add a type not present in `TypeBucket`.
 pub struct AnyAttribute(TypeId, Box<dyn Bucket>, Box<dyn Any>);

@@ -15,12 +15,23 @@ use std::{collections::HashMap, rc::Rc};
 pub use x::{Attr, AttrEq};
 use x::{XForwards, XMatch};
 
+/// [TextTag] is an attribute added at the beginning of every new line.
+/// 
+/// Each piece of a line is sort of "tokenized" and each token is assigned a [TextTag] attribute.
 #[derive(Clone, Debug, PartialEq)]
 pub enum TextTag {
+    /// Natural number like `0`, `1200`, `0004`
     NATN,
+    /// English sentence punctuation symbols.
+    /// `,`, `.`, `!`, `;`, `:`, `?`, `'`, `"`
     PUNC,
+    /// Any other symbol or emoji
     SYMB,
+    /// A combination of unicode whitespaces
     SPACE,
+    /// A word as identified by unicode word recognition rules.
+    /// 
+    /// For example: `yello`, `Paris`, `don't`, `should've`
     WORD,
 }
 
@@ -83,12 +94,12 @@ impl<'l, Found> LLLineFind<'l, Found> {
     }
 }
 
-/// TODO: insert [TextTag]s into the ranges
+/// Create using [layered_nlp::create_tokens] function.
 pub struct LLLine {
     // how much do we actually need of the original Vec if much of the data is put into the bi-map?
     ll_tokens: Vec<LLToken>,
     attrs: LLLineAttrs,
-}
+} 
 
 impl LLLine {
     pub(crate) fn new(ll_tokens: Vec<LLToken>) -> Self {
@@ -280,6 +291,11 @@ pub struct LLCursorAssignment<Attr> {
 }
 
 pub trait Resolver {
+    /// The kind of value that this resolver will assign into the LLLine.
+    ///
+    /// It is constrained to [std::fmt::Debug] in order to ensure that it's easy
+    /// to debug with [layered_nlp::LLLineDisplay].
     type Attr: std::fmt::Debug + 'static;
+    /// How to perform the assignments.
     fn go(&self, selection: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>>;
 }

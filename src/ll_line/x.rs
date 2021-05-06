@@ -1,3 +1,5 @@
+//! # Matcher pieces
+
 mod all;
 mod any_of;
 mod attr;

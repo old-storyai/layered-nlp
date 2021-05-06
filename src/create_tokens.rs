@@ -37,7 +37,15 @@ impl InputToken {
 }
 
 /// Splits the `InputToken`s and generate `TextTag`s.
+#[deprecated = "Use create_line_from_input_tokens"]
 pub fn create_tokens<F>(input: Vec<InputToken>, get_text_size: F) -> LLLine
+where
+    F: Fn(&str) -> usize,
+{
+    create_line_from_input_tokens(input, get_text_size)
+}
+
+pub fn create_line_from_input_tokens<F>(input: Vec<InputToken>, get_text_size: F) -> LLLine
 where
     F: Fn(&str) -> usize,
 {
