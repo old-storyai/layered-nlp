@@ -1,0 +1,32 @@
+# When releasing to crates.io:
+# - Remove path dependencies
+# - Update html_root_url.
+# - Update doc url
+#   - Cargo.toml
+#   - README.md
+# - Create "v0.1.x" git tag
+
+[package]
+authors = [
+  "Cole Lawrence <cole@colelawrence.com>",
+  "Dylan Ancel (leudz) <dylan.ancel@gmail.com>",
+  "Story.ai Team <team@story.ai>",
+]
+categories = [
+  "text-processing",
+  "parsing",
+  "wasm",
+]
+description = "Amount plugin for layered-nlp"
+edition = "2018"
+keywords = ["layered-nlp", "nlp", "tokens", "grammar", "wasm"]
+license = "MIT OR Apache-2.0"
+name = "layered-amount"
+version = "0.1.0"
+
+[dependencies]
+layered-nlp = {path = "..", version = "0.1", default-features = false}
+rust_decimal = {version = "1.10", default-features = false, features = ["std"]}
+
+[dev-dependencies]
+insta = "1.7.1"

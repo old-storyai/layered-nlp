@@ -25,7 +25,7 @@ categories = [
 keywords = ["nlp", "tokens", "framework", "grammar", "wasm"]
 
 [workspace]
-members = ["examples", "layered-part-of-speech", "layered-clauses"]
+members = ["examples", "layered-part-of-speech", "layered-amount", "layered-clauses"]
 
 [dependencies]
 unicode-width = "0.1.8"
