@@ -8,7 +8,7 @@
 
 [package]
 name = "layered-part-of-speech"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
   "Dylan Ancel (leudz) <dylan.ancel@gmail.com>",
   "Story.ai Team <team@story.ai>",

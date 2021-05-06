@@ -13,7 +13,7 @@ authors = [
 ]
 edition = "2018"
 name = "layered-nlp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Highly-flexible data-oriented NLP framework"
 repository = "https://github.com/storyscript/layered-nlp"
 homepage = "https://github.com/storyscript/layered-nlp"
