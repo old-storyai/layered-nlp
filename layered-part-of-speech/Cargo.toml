@@ -9,8 +9,20 @@
 [package]
 name = "layered-part-of-speech"
 version = "0.1.0"
-authors = ["leudz <dylan.ancel@gmail.com>"]
+authors = [
+  "Dylan Ancel (leudz) <dylan.ancel@gmail.com>",
+  "Story.ai Team <team@story.ai>",
+]
 edition = "2018"
+description = "Part of speech plugin for layered-nlp"
+license = "MIT OR Apache-2.0"
+categories = [
+    "text-processing",
+    "parsing",
+    "wasm",
+]
+keywords = ["layered-nlp", "nlp", "tokens", "framework", "grammar", "wasm"]
+
 
 [dependencies]
 layered-nlp = { path = "..", version = "0.1", default-features = false }
