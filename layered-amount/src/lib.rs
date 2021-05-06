@@ -6,6 +6,7 @@
 mod amounts;
 
 pub use amounts::{Amount, AmountResolver};
+pub use rust_decimal;
 
 #[cfg(test)]
 mod tests {

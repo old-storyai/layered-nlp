@@ -4,6 +4,21 @@ use rust_decimal::Decimal;
 #[derive(Clone, Debug)]
 pub struct Amount(Decimal);
 
+impl Amount {
+    pub fn get_decimal(&self) -> &Decimal {
+        &self.0
+    }
+    pub fn new<T: Into<Decimal>>(from: T) -> Self {
+        Self(from.into())
+    }
+}
+
+impl From<Decimal> for Amount {
+    fn from(dec: Decimal) -> Self {
+        Amount(dec)
+    }
+}
+
 pub struct AmountResolver {
     /// Configure for localization
     delimiters: Vec<char>,
@@ -15,6 +30,28 @@ impl AmountResolver {
         Self {
             delimiters,
             decimal,
+        }
+    }
+    /// Default comma `,` and apostrophe `'` delimeters, with period `.` decimal point.
+    ///  * `1'000'240.00` = `1000240.00`
+    ///  * `1,000,000` = `1000000`
+    ///  * `1,00,00` = `10000`
+    ///  * `1.00,00` = `1.0000`
+    pub fn english() -> Self {
+        Self {
+            delimiters: vec![',', '\''],
+            decimal: '.',
+        }
+    }
+    /// Default period `.`, apostrophe `'`, and space ` ` delimeters, with comma `,` decimal point.
+    ///  * `1'000'240,00` = `1000240.00`
+    ///  * `1 000 000` = `1000000`
+    ///  * `1,00` = `1.00`
+    ///  * `1.00,00` = `100.00`
+    pub fn french() -> Self {
+        Self {
+            delimiters: vec![' ', '.', '\''],
+            decimal: '.',
         }
     }
 }
