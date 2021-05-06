@@ -18,6 +18,8 @@ categories = [
   "wasm",
 ]
 description = "Amount plugin for layered-nlp"
+repository = "https://github.com/storyscript/layered-nlp"
+homepage = "https://github.com/storyscript/layered-nlp"
 edition = "2018"
 keywords = ["layered-nlp", "nlp", "tokens", "grammar", "wasm"]
 license = "MIT OR Apache-2.0"

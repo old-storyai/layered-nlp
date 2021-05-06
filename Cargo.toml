@@ -15,6 +15,8 @@ edition = "2018"
 name = "layered-nlp"
 version = "0.1.0"
 description = "Highly-flexible data-oriented NLP framework"
+repository = "https://github.com/storyscript/layered-nlp"
+homepage = "https://github.com/storyscript/layered-nlp"
 license = "MIT OR Apache-2.0"
 categories = [
     "text-processing",
@@ -22,7 +24,7 @@ categories = [
     "parsing",
     "wasm",
 ]
-keywords = ["nlp", "tokens", "framework", "grammar", "wasm"]
+keywords = ["nlp", "layered-nlp", "framework", "grammar", "wasm"]
 
 [workspace]
 members = ["examples", "layered-part-of-speech", "layered-amount", "layered-clauses"]

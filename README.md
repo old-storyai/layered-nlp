@@ -1,4 +1,4 @@
-[![Layered NLP](./assets/layered-nlp.svg)](https://github.com/storyscript/layered-nlp)
+[![Layered NLP](https://raw.githubusercontent.com/storyscript/layered-nlp/main/assets/layered-nlp.svg)](https://github.com/storyscript/layered-nlp)
 
 Incrementally build up recognizers over an abstract token that combine to create _multiple_ possible interpretations.
 
