@@ -4,7 +4,7 @@ Incrementally build up recognizers over an abstract token that combine to create
 
 Key features:
 
-- Abstract over token type to support "rich" tokens like we have at Storyscript.
+- Abstract over token type to support "rich" tokens like we have at Story.ai.
 - May generate multiple interpretations of the same token span.
 - Produces a set of ranges over the input token list with different attributes, for example:
 
