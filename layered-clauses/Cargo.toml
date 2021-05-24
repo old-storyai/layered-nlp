@@ -29,5 +29,5 @@ keywords = ["layered-nlp", "nlp", "tokens", "grammar", "wasm"]
 layered-nlp = { path = "..", version = "0.1", default-features = false }
 
 [dev-dependencies]
-insta = "1.7.1"
+insta = "1.7"
 layered-part-of-speech = { path = "../layered-part-of-speech" }

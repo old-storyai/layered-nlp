@@ -30,11 +30,11 @@ keywords = ["nlp", "layered-nlp", "framework", "grammar", "wasm"]
 members = ["examples", "layered-part-of-speech", "layered-amount", "layered-clauses"]
 
 [dependencies]
-unicode-width = "0.1.8"
-unicode-segmentation = "1.7.1"
-once_cell = "1.7.2"
-regex = "1.4.5"
+once_cell = "1.7"
+regex = "1.5"
+unicode-segmentation = "1.7"
+unicode-width = "0.1"
 
 [dev-dependencies]
 insta = "1.7.1"
-rust_decimal = {version = "1.10.3", default-features = false, features = ["std"]}
+rust_decimal = {version = "1.14", default-features = false, features = ["std"]}
