@@ -158,13 +158,42 @@ where
                 insert_collected_letters!();
                 insert_collected_digits!();
             } else {
-                ltokens.push((
-                    LToken::Text(
-                        unicode_word.to_string(),
-                        get_word_tag::get_unicode_word_tag(unicode_word),
-                    ),
-                    get_text_size(unicode_word),
-                ));
+                let mut last_apostrophe_index = 0;
+
+                unicode_word.match_indices('\'').for_each(|(index, _)| {
+                    if !(last_apostrophe_index..index).is_empty() {
+                        ltokens.push((
+                            LToken::Text(
+                                unicode_word[last_apostrophe_index..index].to_string(),
+                                get_word_tag::get_unicode_word_tag(
+                                    &unicode_word[last_apostrophe_index..index],
+                                ),
+                            ),
+                            get_text_size(&unicode_word[last_apostrophe_index..index]),
+                        ));
+                    }
+
+                    if last_apostrophe_index == 0 {
+                        ltokens.push((
+                            LToken::Text("'".to_string(), get_word_tag::get_unicode_word_tag("'")),
+                            get_text_size("'"),
+                        ));
+                    }
+
+                    last_apostrophe_index = index + 1;
+                });
+
+                if !unicode_word[last_apostrophe_index..].is_empty() {
+                    ltokens.push((
+                        LToken::Text(
+                            unicode_word[last_apostrophe_index..].to_string(),
+                            get_word_tag::get_unicode_word_tag(
+                                &unicode_word[last_apostrophe_index..],
+                            ),
+                        ),
+                        get_text_size(&unicode_word[last_apostrophe_index..]),
+                    ));
+                }
             }
 
             ltokens
@@ -173,7 +202,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::{create_tokens, InputToken};
+    use super::{create_line_from_input_tokens, InputToken};
     use crate::ll_line::LLLineDisplay;
     use crate::type_bucket::AnyAttribute;
 
@@ -190,7 +219,7 @@ mod test {
 
     #[test]
     fn test_create_tokens() {
-        let ll_line = create_tokens(
+        let ll_line = create_line_from_input_tokens(
             vec![
                 InputToken::Text {
                     text: String::from("Hello, "),
@@ -223,7 +252,7 @@ mod test {
 
     #[test]
     fn test_create_tokens_email() {
-        let ll_line = create_tokens(
+        let ll_line = create_line_from_input_tokens(
             vec![InputToken::Text {
                 text: String::from("name@example.com"),
                 attrs: vec![
