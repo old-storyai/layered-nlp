@@ -6,13 +6,13 @@ use crate::{x, Resolver};
 /// Useful for name matching.
 ///
 /// Simple resolver for mapping a string matching a single token to an attribute.
-pub struct TextMatchAssignResolver<T: Clone> {
+pub struct TextMatchAssignResolver<T> {
     case_sensitive: bool,
     // $ tokens $$ text with spaces $$$ regex?
     lookup: HashMap<String, Vec<T>>,
 }
 
-impl<T: Clone> TextMatchAssignResolver<T> {
+impl<T: Debug + Clone + 'static> TextMatchAssignResolver<T> {
     pub fn new(lookup: HashMap<String, Vec<T>>) -> Self {
         TextMatchAssignResolver {
             case_sensitive: true,
