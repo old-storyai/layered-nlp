@@ -287,9 +287,7 @@ impl<'l> XDirection<'l> for XBackwards {
 
     fn after(&self, idx: usize, _: &'l LLLine) -> Option<Self> {
         if idx > 0 {
-            Some(XBackwards {
-                from_idx: self.from_idx - 1,
-            })
+            Some(XBackwards { from_idx: idx - 1 })
         } else {
             None
         }
