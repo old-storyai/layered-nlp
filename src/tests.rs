@@ -6,7 +6,7 @@ use crate::create_tokens::*;
 use crate::ll_line::{LLCursorAssignment, LLLine, LLLineDisplay, LLSelection, Resolver, TextTag};
 
 pub(crate) fn test_line(input: &str) -> LLLine {
-    create_tokens(
+    create_line_from_input_tokens(
         vec![InputToken::Text {
             text: input.to_string(),
             attrs: Vec::new(),
