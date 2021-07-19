@@ -18,72 +18,60 @@ impl Resolver for ClauseResolver {
     type Attr = Clause;
 
     fn go(&self, selection: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>> {
-        let mut clauses = Vec::new();
+        let mut confition_found = false;
 
-        // Start by splitting the line on each `ConditionStart`
-        let if_blocks = selection.split_by(&x::attr_eq(&ClauseKeyword::ConditionStart));
+        let clauses = selection.split_by(&x::any_of((
+            x::attr::<ClauseKeyword>(),
+            x::attr_eq(&TextTag::PUNC),
+        )));
 
-        if if_blocks.first() == Some(&selection) {
+        if clauses.len() == 1 {
             // If the first selection is the whole line that means there is no `ConditionStart` in it
             // We probably want to handle this case better in the future
-            if let Some(selection) = selection.trim(&x::whitespace()) {
-                clauses.push(selection.finish_with_attr(Clause::Independent));
+            if let Some(trimmed_clause_selection) = clauses[0].trim(&x::whitespace()) {
+                if let Some((_, ClauseKeyword::ConditionStart)) =
+                    clauses[0].match_first_backwards(&x::attr::<ClauseKeyword>())
+                {
+                    vec![trimmed_clause_selection.finish_with_attr(Clause::Condition)]
+                } else {
+                    vec![trimmed_clause_selection.finish_with_attr(Clause::Independent)]
+                }
+            } else {
+                Vec::new()
             }
         } else {
-            // `filter_map` is used to be able to use `?`
-            if_blocks
+            clauses
                 .into_iter()
-                .filter_map(|if_block_sel| {
-                    // If there is a `ConditionStart` in the line we split each selection further by splitting in each `ClauseKeyword`
-                    // We get all clauses this way
-                    let mut clause_iter = if_block_sel
-                        .split_by(&x::any_of((
-                            x::attr::<ClauseKeyword>(),
-                            x::attr_eq(&TextTag::PUNC),
-                        )))
-                        .into_iter();
+                .filter_map(|clause_selection| {
+                    let trimmed_clause_selection = clause_selection.trim(&x::whitespace())?;
 
-                    // The next goal is to determine the kind of each clause
-                    // The first clause can only be a `Condition` or `LeadingEffect` based on if it is preceded by a `ConditionStart` or not
-                    // The other clauses are either `LeadingEffect` if they are before the `ConditionStart` or `TrailingEffect` if they are after
-                    if let Some(first_clause_sel) = clause_iter.next() {
-                        if first_clause_sel
-                            .match_first_backwards(&x::attr_eq(&ClauseKeyword::ConditionStart))
-                            .is_some()
-                        {
-                            clauses.push(
-                                first_clause_sel
-                                    .trim(&x::whitespace())?
-                                    .finish_with_attr(Clause::Condition),
-                            );
+                    if let Some((_, clause_keyword)) =
+                        clause_selection.match_first_backwards(&x::attr::<ClauseKeyword>())
+                    {
+                        match clause_keyword {
+                            ClauseKeyword::ConditionStart => {
+                                confition_found = true;
 
-                            clauses.extend(clause_iter.filter_map(|clause_sel| {
-                                Some(
-                                    clause_sel
-                                        .trim(&x::whitespace())?
-                                        .finish_with_attr(Clause::TrailingEffect),
-                                )
-                            }));
-                        } else {
-                            clauses.extend(
-                                std::iter::once(first_clause_sel)
-                                    .chain(clause_iter)
-                                    .filter_map(|clause_sel| {
-                                        Some(
-                                            clause_sel
-                                                .trim(&x::whitespace())?
-                                                .finish_with_attr(Clause::LeadingEffect),
-                                        )
-                                    }),
-                            );
+                                Some(trimmed_clause_selection.finish_with_attr(Clause::Condition))
+                            }
+                            ClauseKeyword::Then => Some(
+                                trimmed_clause_selection.finish_with_attr(Clause::TrailingEffect),
+                            ),
+                            ClauseKeyword::And => Some(trimmed_clause_selection.finish_with_attr(
+                                if confition_found {
+                                    Clause::TrailingEffect
+                                } else {
+                                    Clause::LeadingEffect
+                                },
+                            )),
                         }
+                    } else if confition_found {
+                        Some(trimmed_clause_selection.finish_with_attr(Clause::TrailingEffect))
+                    } else {
+                        Some(trimmed_clause_selection.finish_with_attr(Clause::LeadingEffect))
                     }
-
-                    Some(())
                 })
-                .for_each(drop);
+                .collect()
         }
-
-        clauses
     }
 }

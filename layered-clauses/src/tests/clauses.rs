@@ -1,9 +1,9 @@
 use crate::{Clause, ClauseKeyword, ClauseKeywordResolver, ClauseResolver};
-use layered_nlp::{create_tokens, InputToken, LLLine, LLLineDisplay};
+use layered_nlp::{create_line_from_input_tokens, InputToken, LLLine, LLLineDisplay};
 use layered_part_of_speech::{POSTagResolver, Tag};
 
 fn test_setup(sentence: &'static str) -> LLLine {
-    create_tokens(
+    create_line_from_input_tokens(
         vec![InputToken::text(sentence.to_string(), Vec::new())],
         |text| text.encode_utf16().count(),
     )
@@ -27,8 +27,8 @@ fn test_clauses() {
     When     it     rains  ,     then     it     pours  .
     ╰──╯ConditionStart
                                  ╰──╯Then
-    ╰───────────────────╯Condition
-                                 ╰───────────────────╯TrailingEffect
+             ╰──────────╯Condition
+                                          ╰──────────╯TrailingEffect
     "###);
 }
 
@@ -49,7 +49,7 @@ fn test_short_clauses() {
     insta::assert_display_snapshot!(ll_line_display, @r###"
     When     it     rains  ,     run  !
     ╰──╯ConditionStart
-    ╰───────────────────╯Condition
+             ╰──────────╯Condition
                                  ╰─╯TrailingEffect
     "###);
 }
@@ -73,7 +73,7 @@ fn test_clauses_comma() {
     insta::assert_display_snapshot!(ll_line_display, @r###"
     If     it     is     raining  ,     open     your     umbrella  .
     ╰╯ConditionStart
-    ╰──────────────────────────╯Condition
+           ╰───────────────────╯Condition
                                         ╰────────────────────────╯TrailingEffect
     ╰╯Noun
     ╰╯Conjunction
@@ -108,7 +108,7 @@ fn tired() {
     insta::assert_display_snapshot!(ll_line_display, @r###"
     Si     tu     es     fatigué  ,     va     te     coucher  .
     ╰╯ConditionStart
-    ╰──────────────────────────╯Condition
+           ╰───────────────────╯Condition
                                         ╰───────────────────╯TrailingEffect
     "###);
 }
@@ -127,7 +127,7 @@ fn tired_rev() {
     Va     te     coucher     si     tu     es     fatigué  .
                               ╰╯ConditionStart
     ╰───────────────────╯LeadingEffect
-                              ╰──────────────────────────╯Condition
+                                     ╰───────────────────╯Condition
     "###);
 }
 
@@ -152,10 +152,10 @@ fn rain() {
                                      ╰──╯Then
                                                                             ╰─╯And
                                                                                                                  ╰─╯And
-    ╰──────────────────────────╯Condition
-                                     ╰────────────────────────────────╯TrailingEffect
-                                                                            ╰──────────────────────────────╯TrailingEffect
-                                                                                                                 ╰──────────────────╯TrailingEffect
+           ╰───────────────────╯Condition
+                                              ╰───────────────────────╯TrailingEffect
+                                                                                    ╰──────────────────────╯TrailingEffect
+                                                                                                                         ╰──────────╯TrailingEffect
     "###
     );
 }
@@ -181,9 +181,9 @@ fn rain_rev() {
                                                                        ╰─╯And
                                                                                                 ╰╯ConditionStart
     ╰───────────────────────╯LeadingEffect
-                                  ╰──────────────────────────────╯LeadingEffect
-                                                                       ╰──────────────────╯LeadingEffect
-                                                                                                ╰──────────────────────────╯Condition
+                                          ╰──────────────────────╯LeadingEffect
+                                                                               ╰──────────╯LeadingEffect
+                                                                                                       ╰───────────────────╯Condition
     "###
     );
 }
@@ -207,8 +207,8 @@ fn extra_rain() {
                                   ╰╯ConditionStart
                                                                    ╰─╯And
     ╰───────────────────────╯LeadingEffect
-                                  ╰──────────────────────────╯Condition
-                                                                   ╰───────────────────────────╯TrailingEffect
+                                         ╰───────────────────╯Condition
+                                                                           ╰───────────────────╯TrailingEffect
     "###
     );
 }
@@ -229,7 +229,7 @@ fn no_keyword() {
 
     insta::assert_display_snapshot!(ll_line_display, @r###"
     Open     the     umbrella  .
-    ╰──────────────────────────╯Independent
+    ╰───────────────────────╯Independent
     "###
     );
 }
