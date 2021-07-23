@@ -18,7 +18,7 @@ impl Resolver for ClauseResolver {
     type Attr = Clause;
 
     fn go(&self, selection: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>> {
-        let mut confition_found = false;
+        let mut condition_clause_found = false;
 
         let clauses = selection.split_by(&x::any_of((
             x::attr::<ClauseKeyword>(),
@@ -50,7 +50,7 @@ impl Resolver for ClauseResolver {
                     {
                         match clause_keyword {
                             ClauseKeyword::ConditionStart => {
-                                confition_found = true;
+                                condition_clause_found = true;
 
                                 Some(trimmed_clause_selection.finish_with_attr(Clause::Condition))
                             }
@@ -58,14 +58,14 @@ impl Resolver for ClauseResolver {
                                 trimmed_clause_selection.finish_with_attr(Clause::TrailingEffect),
                             ),
                             ClauseKeyword::And => Some(trimmed_clause_selection.finish_with_attr(
-                                if confition_found {
+                                if condition_clause_found {
                                     Clause::TrailingEffect
                                 } else {
                                     Clause::LeadingEffect
                                 },
                             )),
                         }
-                    } else if confition_found {
+                    } else if condition_clause_found {
                         Some(trimmed_clause_selection.finish_with_attr(Clause::TrailingEffect))
                     } else {
                         Some(trimmed_clause_selection.finish_with_attr(Clause::LeadingEffect))
