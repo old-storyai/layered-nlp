@@ -28,4 +28,4 @@ keywords = ["layered-nlp", "nlp", "tokens", "grammar", "wasm"]
 
 [dependencies]
 layered-nlp = { path = "..", version = "0.1", default-features = false }
-wiktionary-part-of-speech-extract = "0.1"
+wiktionary-part-of-speech-extract = "^0.1.2"

@@ -31,7 +31,6 @@ members = ["examples", "layered-part-of-speech", "layered-amount", "layered-clau
 
 [dependencies]
 once_cell = "1.7"
-regex = "1.5"
 unicode-segmentation = "1.7"
 unicode-width = "0.1"
 
