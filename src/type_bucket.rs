@@ -12,7 +12,7 @@ use std::{
 /// and is used internally for collecting attribute assignments.
 // `Box<dyn Bucket>` is the empty bucket for this type.
 // It is required to add a type not present in `TypeBucket`.
-pub struct AnyAttribute(TypeId, Box<dyn Bucket>, Box<dyn Any>);
+pub struct AnyAttribute(TypeId, Box<dyn Bucket + Send + Sync>, Box<dyn Any>);
 
 impl std::fmt::Debug for AnyAttribute {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -21,7 +21,7 @@ impl std::fmt::Debug for AnyAttribute {
 }
 
 impl AnyAttribute {
-    pub fn new<T: 'static + Debug>(value: T) -> Self {
+    pub fn new<T: 'static + Debug + Send + Sync>(value: T) -> Self {
         AnyAttribute(
             TypeId::of::<T>(),
             Box::new(Vec::<T>::new()),
@@ -128,10 +128,10 @@ pub struct TypeBucket {
     // dyn Bucket is always a Vec<T>
     // Box<Vec<T>>
     // Box<dyn Bucket>
-    map: HashMap<TypeId, Box<dyn Bucket>>,
+    map: HashMap<TypeId, Box<dyn Bucket + Send + Sync>>,
 }
 
-impl fmt::Debug for dyn Bucket {
+impl fmt::Debug for dyn Bucket + Send + Sync {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Bucket::debug(self, f)
     }
@@ -194,7 +194,7 @@ impl TypeBucket {
     ///
     /// If a value of this type already exists, it will be returned.
     #[track_caller]
-    pub fn insert<T: 'static + Debug>(&mut self, val: T) {
+    pub fn insert<T: 'static + Debug + Send + Sync>(&mut self, val: T) {
         self.map
             .entry(TypeId::of::<T>())
             .or_insert_with(|| Box::new(Vec::<T>::new()))

@@ -39,7 +39,7 @@ impl<T: Debug + Clone + 'static> TextMatchAssignResolver<T> {
     }
 }
 
-impl<T: Debug + Clone + 'static> Resolver for TextMatchAssignResolver<T> {
+impl<T: Debug + Clone + 'static + Send + Sync> Resolver for TextMatchAssignResolver<T> {
     type Attr = T;
 
     fn go(&self, selection: crate::LLSelection) -> Vec<crate::LLCursorAssignment<Self::Attr>> {

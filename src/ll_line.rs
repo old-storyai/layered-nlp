@@ -16,7 +16,7 @@ pub use x::{Attr, AttrEq};
 use x::{XForwards, XMatch};
 
 /// [TextTag] is an attribute added at the beginning of every new line.
-/// 
+///
 /// Each piece of a line is sort of "tokenized" and each token is assigned a [TextTag] attribute.
 #[derive(Clone, Debug, PartialEq)]
 pub enum TextTag {
@@ -30,7 +30,7 @@ pub enum TextTag {
     /// A combination of unicode whitespaces
     SPACE,
     /// A word as identified by unicode word recognition rules.
-    /// 
+    ///
     /// For example: `yello`, `Paris`, `don't`, `should've`
     WORD,
 }
@@ -50,6 +50,13 @@ pub struct LLToken {
     // token span position (not token index)
     pub(crate) pos_ends_at: usize,
     pub(crate) token: LToken,
+}
+
+impl LLToken {
+    /// Get a reference to the l l token's token.
+    pub fn get_token(&self) -> &LToken {
+        &self.token
+    }
 }
 
 /// (starts at, ends at) token indexes
@@ -99,7 +106,7 @@ pub struct LLLine {
     // how much do we actually need of the original Vec if much of the data is put into the bi-map?
     ll_tokens: Vec<LLToken>,
     attrs: LLLineAttrs,
-} 
+}
 
 impl LLLine {
     pub(crate) fn new(ll_tokens: Vec<LLToken>) -> Self {
@@ -220,13 +227,13 @@ impl LLLine {
             .collect()
     }
 
-    fn pos_end_at(&self, idx: usize) -> usize {
+    pub fn pos_end_at(&self, idx: usize) -> usize {
         self.ll_tokens
             .get(idx)
             .expect("pos_end_at in bounds")
             .pos_ends_at
     }
-    fn pos_start_at(&self, idx: usize) -> usize {
+    pub fn pos_start_at(&self, idx: usize) -> usize {
         self.ll_tokens
             .get(idx)
             .expect("pos_start_at in bounds")
@@ -259,7 +266,7 @@ impl LLLine {
 }
 
 impl LLLineAttrs {
-    fn insert<T: 'static + std::fmt::Debug>(&mut self, range: LRange, value: T) {
+    fn insert<T: 'static + std::fmt::Debug + Send + Sync>(&mut self, range: LRange, value: T) {
         self.starts_at
             .get_mut(range.0)
             .expect("has initial starts_at value in bounds")
@@ -295,7 +302,7 @@ pub trait Resolver {
     ///
     /// It is constrained to [std::fmt::Debug] in order to ensure that it's easy
     /// to debug with [layered_nlp::LLLineDisplay].
-    type Attr: std::fmt::Debug + 'static;
+    type Attr: std::fmt::Debug + 'static + Send + Sync;
     /// How to perform the assignments.
     fn go(&self, selection: LLSelection) -> Vec<LLCursorAssignment<Self::Attr>>;
 }

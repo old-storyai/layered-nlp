@@ -28,7 +28,7 @@ impl InputToken {
         InputToken::Custom { size, attrs }
     }
 
-    pub fn add_attr<T: 'static + std::fmt::Debug>(&mut self, value: T) {
+    pub fn add_attr<T: 'static + std::fmt::Debug + Send + Sync>(&mut self, value: T) {
         match self {
             InputToken::Text { attrs, .. } => attrs.push(AnyAttribute::new(value)),
             InputToken::Custom { attrs, .. } => attrs.push(AnyAttribute::new(value)),
