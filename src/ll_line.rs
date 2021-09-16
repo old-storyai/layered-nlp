@@ -227,13 +227,15 @@ impl LLLine {
             .collect()
     }
 
-    pub fn pos_end_at(&self, idx: usize) -> usize {
+    /// Go from a token _index_ to its ending _position_ in the input tokens.
+    fn pos_end_at(&self, idx: usize) -> usize {
         self.ll_tokens
             .get(idx)
             .expect("pos_end_at in bounds")
             .pos_ends_at
     }
-    pub fn pos_start_at(&self, idx: usize) -> usize {
+    /// Go from a token _index_ to its starting _position_ in the input tokens.
+    fn pos_start_at(&self, idx: usize) -> usize {
         self.ll_tokens
             .get(idx)
             .expect("pos_start_at in bounds")
