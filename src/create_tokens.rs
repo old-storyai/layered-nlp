@@ -158,30 +158,33 @@ where
                 insert_collected_letters!();
                 insert_collected_digits!();
             } else {
-                let mut last_apostrophe_index = 0;
+                // Hmm
+                // This was supposed to catch quotes with apostrophes
+                // But din't work that well and split clauses on apostrophes which is more common
+                let last_apostrophe_index = 0;
 
-                unicode_word.match_indices('\'').for_each(|(index, _)| {
-                    if !(last_apostrophe_index..index).is_empty() {
-                        ltokens.push((
-                            LToken::Text(
-                                unicode_word[last_apostrophe_index..index].to_string(),
-                                get_word_tag::get_unicode_word_tag(
-                                    &unicode_word[last_apostrophe_index..index],
-                                ),
-                            ),
-                            get_text_size(&unicode_word[last_apostrophe_index..index]),
-                        ));
-                    }
+                // unicode_word.match_indices('\'').for_each(|(index, _)| {
+                //     if !(last_apostrophe_index..index).is_empty() {
+                //         ltokens.push((
+                //             LToken::Text(
+                //                 unicode_word[last_apostrophe_index..index].to_string(),
+                //                 get_word_tag::get_unicode_word_tag(
+                //                     &unicode_word[last_apostrophe_index..index],
+                //                 ),
+                //             ),
+                //             get_text_size(&unicode_word[last_apostrophe_index..index]),
+                //         ));
+                //     }
 
-                    if last_apostrophe_index == 0 {
-                        ltokens.push((
-                            LToken::Text("'".to_string(), get_word_tag::get_unicode_word_tag("'")),
-                            get_text_size("'"),
-                        ));
-                    }
+                //     if last_apostrophe_index == 0 {
+                //         ltokens.push((
+                //             LToken::Text("'".to_string(), get_word_tag::get_unicode_word_tag("'")),
+                //             get_text_size("'"),
+                //         ));
+                //     }
 
-                    last_apostrophe_index = index + 1;
-                });
+                //     last_apostrophe_index = index + 1;
+                // });
 
                 if !unicode_word[last_apostrophe_index..].is_empty() {
                     ltokens.push((

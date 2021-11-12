@@ -125,9 +125,10 @@ impl LLLine {
         for (token_idx, ll_token) in ll_tokens.iter().enumerate() {
             match &ll_token.token {
                 LToken::Text(text, tag) => {
-                    if text.chars().count() == 1 {
+                    let mut chars = text.chars();
+                    if let (Some(c), None) = (chars.next(), chars.next()) {
                         // insert char automatically if just one char
-                        attrs.insert((token_idx, token_idx), text.chars().next().unwrap());
+                        attrs.insert((token_idx, token_idx), c);
                     }
                     // insert TextTag automatically
                     attrs.insert((token_idx, token_idx), tag.clone());
