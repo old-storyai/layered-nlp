@@ -216,7 +216,7 @@ impl LLLine {
                 let forwards = XForwards { from_idx: i };
 
                 matcher
-                    .go(&forwards, &self)
+                    .go(&forwards, self)
                     .into_iter()
                     .map(move |(out, next_idx)| LLLineFind {
                         start_pos_at: self.pos_start_at(i),

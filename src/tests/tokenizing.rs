@@ -8,7 +8,7 @@ fn split_input(input: &str) -> String {
 fn test_tokenizing() {
     let input = ". 1 000.23. € .5";
 
-    insta::assert_display_snapshot!(split_input(&input), @r###"
+    insta::assert_display_snapshot!(split_input(input), @r###"
     [
         LLToken {
             token_idx: 0,

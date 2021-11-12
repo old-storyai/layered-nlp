@@ -4,11 +4,11 @@ use crate::ll_line::TextTag;
 const PUNCTUATION: &[char] = &[',', '.', '!', ';', ':', '?', '\'', '"'];
 
 pub(crate) fn get_unicode_word_tag(word: &str) -> TextTag {
-    if is_spaces(&word) {
+    if is_spaces(word) {
         TextTag::SPACE
     } else if word.len() == 1 && PUNCTUATION.contains(&word.chars().next().unwrap()) {
         TextTag::PUNC
-    } else if is_word(&word) {
+    } else if is_word(word) {
         TextTag::WORD
     } else {
         TextTag::SYMB
@@ -21,7 +21,7 @@ fn is_spaces(input: &str) -> bool {
             return false;
         }
     }
-    return true;
+    true
 }
 
 /// We count "don't", "peoples'", and "baseball-card" to be words!
@@ -49,7 +49,7 @@ fn is_word(input: &str) -> bool {
         }
     }
 
-    return true;
+    true
 }
 
 #[cfg(test)]

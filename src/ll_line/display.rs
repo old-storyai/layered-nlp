@@ -50,7 +50,7 @@ impl<'a> std::fmt::Display for LLLineDisplay<'a> {
 
                 match &ll_token.token {
                     LToken::Text(text, _) => {
-                        opening_line.push_str(&text);
+                        opening_line.push_str(text);
                     }
                     LToken::Value { .. } => {
                         write!(&mut opening_line, "<>")?;
@@ -86,7 +86,7 @@ impl<'a> std::fmt::Display for LLLineDisplay<'a> {
                 f.write_char('╯')?;
             }
 
-            f.write_str(&debug_value)?;
+            f.write_str(debug_value)?;
         }
 
         Ok(())

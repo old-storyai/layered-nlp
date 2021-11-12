@@ -96,7 +96,7 @@ impl<'l> XDirection<'l> for XForwards {
                 ll_line
                     .attrs
                     .values
-                    .get(&range)
+                    .get(range)
                     .unwrap()
                     .get::<T>()
                     .iter()
@@ -123,7 +123,7 @@ impl<'l> XDirection<'l> for XForwards {
                 ll_line
                     .attrs
                     .values
-                    .get(&range)
+                    .get(range)
                     .unwrap()
                     .get::<T>()
                     .iter()
@@ -202,7 +202,7 @@ impl<'l> XDirection<'l> for XBackwards {
                 ll_line
                     .attrs
                     .values
-                    .get(&range)
+                    .get(range)
                     .unwrap()
                     .get::<T>()
                     .iter()
@@ -232,7 +232,7 @@ impl<'l> XDirection<'l> for XBackwards {
                 ll_line
                     .attrs
                     .values
-                    .get(&range)
+                    .get(range)
                     .unwrap()
                     .get::<T>()
                     .iter()
@@ -260,12 +260,12 @@ impl<'l> XDirection<'l> for XBackwards {
                 ll_line
                     .attrs
                     .values
-                    .get(&range)
+                    .get(range)
                     .unwrap()
                     .get::<T>()
                     .iter()
                     .filter_map(move |val| {
-                        if set.contains(&val) {
+                        if set.contains(val) {
                             Some((val, ToIdx(range.0)))
                         } else {
                             None
