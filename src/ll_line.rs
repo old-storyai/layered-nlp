@@ -44,6 +44,7 @@ pub enum LToken {
 
 #[derive(Debug)]
 pub struct LLToken {
+    #[allow(unused)]
     pub(crate) token_idx: usize,
     // token span position (not token index)
     pub(crate) pos_starts_at: usize,
